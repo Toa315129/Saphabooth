@@ -12,9 +12,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       height: 100vh;
-      overflow: hidden;
+      padding: 20px;
+      box-sizing: border-box;
     }
     h1 {
       font-size: 48px;
@@ -22,13 +23,15 @@
       color: white;
       font-weight: bold;
       letter-spacing: 2px;
+      text-align: center;
     }
     video {
       border-radius: 12px;
       box-shadow: 0 0 15px rgba(255,255,255,0.2);
-      width: 480px;
-      height: 360px;
+      width: 360px;
+      height: 480px;
       object-fit: cover;
+      background: black;
     }
     .controls {
       margin-top: 15px;
@@ -96,7 +99,7 @@
     <div class="frame" id="f3">3</div>
   </div>
 
-  <canvas id="canvas" width="480" height="360" style="display:none"></canvas>
+  <canvas id="canvas" width="360" height="480" style="display:none"></canvas>
 
   <script>
     (async () => {
@@ -119,7 +122,7 @@
         if (window.stream) {
           window.stream.getTracks().forEach(track => track.stop());
         }
-        const constraints = { video: deviceId ? { deviceId: { exact: deviceId } } : true };
+        const constraints = { video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "user" } };
         window.stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = window.stream;
       }
@@ -128,6 +131,7 @@
       await initCamera(devices[currentCam]?.deviceId);
 
       switchBtn.addEventListener('click', async () => {
+        if (devices.length < 2) return alert("ไม่มีกล้องให้สลับ");
         currentCam = (currentCam + 1) % devices.length;
         await initCamera(devices[currentCam].deviceId);
       });
@@ -148,8 +152,8 @@
       downloadBtn.addEventListener('click', () => {
         if (!captures[0]) return alert('ยังไม่มีภาพ');
         const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = 500;
-        tempCanvas.height = 800;
+        tempCanvas.width = 400;
+        tempCanvas.height = 700;
         const tctx = tempCanvas.getContext('2d');
         tctx.fillStyle = "white";
         tctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
@@ -159,7 +163,7 @@
             const img = new Image();
             img.src = c;
             img.onload = () => {
-              tctx.drawImage(img, 50, 50 + i * 250, 400, 200);
+              tctx.drawImage(img, 50, 50 + i * 220, 300, 200);
               if (i === captures.length - 1) {
                 const a = document.createElement('a');
                 a.download = "photobooth.png";
@@ -171,7 +175,6 @@
         });
       });
 
-      // 📌 Upload handler
       uploadBtn.addEventListener('click', () => fileInput.click());
       fileInput.addEventListener('change', (e) => {
         const files = e.target.files;
@@ -187,21 +190,18 @@
             frames[i].innerHTML = `<img src="${captures[i]}">`;
           };
           reader.readAsDataURL(files[i]);
+          index++;
         }
         downloadBtn.disabled = false;
         printBtn.disabled = false;
       });
 
-      // 📌 Print handler
       printBtn.addEventListener('click', () => {
         if (!captures[0]) return alert('ยังไม่มีภาพ');
-        downloadBtn.click();
-        setTimeout(()=>{
-          const win = window.open();
-          win.document.write('<img src="'+captures[0]+'" style="width:100%">');
-          win.print();
-          win.close();
-        },500);
+        const win = window.open();
+        win.document.write('<img src="'+captures[0]+'" style="width:100%">');
+        win.print();
+        win.close();
       });
     })();
   </script>
