@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Photo Booth</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: white;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    video {
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.2);
+      width: 480px;
+      height: 360px;
+      object-fit: cover;
+    }
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      background: crimson;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.2s;
+    }
+    .btn:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+    .gallery {
+      margin-top: 20px;
+      display: flex;
+      gap: 15px;
+    }
+    .frame {
+      width: 140px;
+      height: 180px;
+      background: white;
+      border: 4px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: red;
+      font-weight: bold;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    .frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <h1>Photo Booth</h1>
+  <video id="video" autoplay playsinline></video>
+
+  <div class="controls">
+    <button class="btn" id="switch">สลับกล้อง</button>
+    <button class="btn" id="capture">ถ่ายภาพ</button>
+    <button class="btn" id="download" disabled>ดาวน์โหลด</button>
+    <button class="btn" id="upload">อัพโหลดภาพ</button>
+    <button class="btn" id="print" disabled>ปริ้นรูป</button>
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+  </div>
+
+  <div class="gallery">
+    <div class="frame" id="f1">1</div>
+    <div class="frame" id="f2">2</div>
+    <div class="frame" id="f3">3</div>
+  </div>
+
+  <canvas id="canvas" width="480" height="360" style="display:none"></canvas>
+
+  <script>
+    (async () => {
+      const video = document.getElementById('video');
+      const captureBtn = document.getElementById('capture');
+      const switchBtn = document.getElementById('switch');
+      const downloadBtn = document.getElementById('download');
+      const uploadBtn = document.getElementById('upload');
+      const printBtn = document.getElementById('print');
+      const fileInput = document.getElementById('fileInput');
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const frames = [document.getElementById('f1'), document.getElementById('f2'), document.getElementById('f3')];
+      let currentCam = 0;
+      let devices = [];
+      let captures = [null, null, null];
+      let index = 0;
+
+      async function initCamera(deviceId) {
+        if (window.stream) {
+          window.stream.getTracks().forEach(track => track.stop());
+        }
+        const constraints = { video: deviceId ? { deviceId: { exact: deviceId } } : true };
+        window.stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = window.stream;
+      }
+
+      devices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+      await initCamera(devices[currentCam]?.deviceId);
+
+      switchBtn.addEventListener('click', async () => {
+        currentCam = (currentCam + 1) % devices.length;
+        await initCamera(devices[currentCam].deviceId);
+      });
+
+      captureBtn.addEventListener('click', () => {
+        if (index >= 3) return alert('ถ่ายครบแล้ว');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const url = canvas.toDataURL('image/png');
+        captures[index] = url;
+        frames[index].innerHTML = `<img src="${url}">`;
+        index++;
+        if (index === 3) {
+          downloadBtn.disabled = false;
+          printBtn.disabled = false;
+        }
+      });
+
+      downloadBtn.addEventListener('click', () => {
+        if (!captures[0]) return alert('ยังไม่มีภาพ');
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 500;
+        tempCanvas.height = 800;
+        const tctx = tempCanvas.getContext('2d');
+        tctx.fillStyle = "white";
+        tctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        captures.forEach((c, i) => {
+          if (c) {
+            const img = new Image();
+            img.src = c;
+            img.onload = () => {
+              tctx.drawImage(img, 50, 50 + i * 250, 400, 200);
+              if (i === captures.length - 1) {
+                const a = document.createElement('a');
+                a.download = "photobooth.png";
+                a.href = tempCanvas.toDataURL("image/png");
+                a.click();
+              }
+            };
+          }
+        });
+      });
+
+      // 📌 Upload handler
+      uploadBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (!files.length) return;
+        captures = [null,null,null];
+        frames.forEach((f,i)=> f.innerHTML = `<span style="opacity:.4">${i+1}</span>`);
+        index = 0;
+        
+        for (let i=0;i<Math.min(3,files.length);i++) {
+          const reader = new FileReader();
+          reader.onload = (ev)=>{
+            captures[i] = ev.target.result;
+            frames[i].innerHTML = `<img src="${captures[i]}">`;
+          };
+          reader.readAsDataURL(files[i]);
+        }
+        downloadBtn.disabled = false;
+        printBtn.disabled = false;
+      });
+
+      // 📌 Print handler
+      printBtn.addEventListener('click', () => {
+        if (!captures[0]) return alert('ยังไม่มีภาพ');
+        downloadBtn.click();
+        setTimeout(()=>{
+          const win = window.open();
+          win.document.write('<img src="'+captures[0]+'" style="width:100%">');
+          win.print();
+          win.close();
+        },500);
+      });
+    })();
+  </script>
+</body>
+</html>
