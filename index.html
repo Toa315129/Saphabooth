@@ -2,825 +2,1036 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>SENA OS 4.0 | CYBER-ARCHIVE</title>
+    <title>SENA PHOTOBOOTH | PRO EDITION</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 
     <style>
         /* =========================================
-           1. KERNEL STYLES (VARS & RESET)
+           1. SYSTEM CORE & IPAD OPTIMIZATION
            ========================================= */
         :root {
-            --h-primary: #00f3ff;   /* Cyan */
-            --h-sec: #ff00ff;       /* Magenta */
-            --h-alert: #ff2a2a;     /* Red */
-            --h-warn: #fcee0a;      /* Yellow */
-            --bg-deep: #050505;
-            --bg-win: #121212;
-            --glass: rgba(20, 20, 20, 0.95);
-            --border: 1px solid #333;
-            --font-ui: 'Rajdhani', sans-serif;
-            --font-code: 'JetBrains Mono', monospace;
+            --bg-color: #000;
+            --text-main: #E0E0E0;
+            --accent: #00ff41;  /* Hacker Green Accent */
+            --alert: #FF3333; 
+            --font-ui: 'DM Sans', sans-serif;
+            --font-code: 'VT323', monospace;
         }
 
-        * { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            margin: 0; padding: 0; background: #000; 
-            overflow: hidden; height: 100vh; width: 100vw; 
-            font-family: var(--font-ui); color: #fff; 
-            cursor: default;
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg-color);
+            height: 100vh; height: 100dvh; /* Dynamic Height for Mobile/iPad */
+            width: 100vw;
+            overflow: hidden;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            display: flex; justify-content: center; align-items: center;
+            touch-action: none; /* ป้องกันการเลื่อนหน้าจอใน iPad */
         }
 
-        /* iPad Landscape Lock Simulation */
-        @media screen and (orientation: portrait) {
-            body::after {
-                content: "PLEASE ROTATE DEVICE ↻";
-                position: fixed; inset: 0; background: #000; z-index: 99999;
-                display: flex; align-items: center; justify-content: center;
-                font-family: var(--font-code); color: var(--h-alert); font-size: 1.5rem;
-            }
+        #monitor {
+            width: 100%; height: 100%;
+            position: relative;
+            background: #050505;
+            display: flex; flex-direction: column;
         }
 
-        /* =========================================
-           2. CRT & VISUAL FX
-           ========================================= */
-        #layer-crt { 
-            position: fixed; inset: 0; pointer-events: none; z-index: 9000; mix-blend-mode: overlay; 
-            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%), 
-                        linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06)); 
-            background-size: 100% 3px, 3px 100%; 
+        /* Scanlines & CRT Effect */
+        .scanlines {
+            position: absolute; inset: 0; pointer-events: none; z-index: 900;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            opacity: 0.6;
         }
-        #layer-vignette { 
-            position: fixed; inset: 0; pointer-events: none; z-index: 8999; 
-            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%); 
+        .vignette {
+            position: absolute; inset: 0; pointer-events: none; z-index: 901;
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%);
         }
 
         /* =========================================
-           3. DESKTOP ENVIRONMENT
+           2. SCREENS & TRANSITIONS
            ========================================= */
-        #desktop { 
-            position: absolute; inset: 0; 
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%); 
-            display: none; flex-direction: column; 
+        .screen {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 10;
+            background: #000;
         }
-        #desktop.active { display: flex; }
+        .screen.active { opacity: 1; pointer-events: auto; }
 
-        /* Status Bar */
-        .sys-bar { 
-            height: 40px; background: rgba(0,0,0,0.8); border-bottom: 1px solid #333; 
-            display: flex; align-items: center; padding: 0 20px; justify-content: space-between; 
-            font-family: var(--font-code); font-size: 0.8rem; letter-spacing: 1px; color: var(--h-primary); 
+        /* BOOT */
+        #screen-boot {
+            justify-content: flex-start; padding: 40px;
+            font-family: var(--font-code); font-size: 1.5rem; color: var(--accent);
+            z-index: 1000;
         }
-        
-        /* Desktop Icons */
-        .icon-grid { 
-            flex: 1; padding: 40px; 
-            display: flex; flex-direction: column; gap: 30px; align-items: flex-start;
+
+        /* HOME */
+        #screen-home {
+            justify-content: center; align-items: center; text-align: center;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
         }
-        .app-icon { 
-            display: flex; align-items: center; gap: 15px; cursor: pointer; 
-            transition: 0.2s; opacity: 0.7; 
+        .main-title {
+            font-size: clamp(3rem, 8vw, 6rem); /* Responsive Font */
+            font-weight: 800; color: #fff;
+            line-height: 0.9; letter-spacing: -2px;
+            margin-bottom: 4vh;
+            text-shadow: 0 0 20px rgba(255,255,255,0.4);
+            animation: float 4s ease-in-out infinite;
         }
-        .app-icon:hover { opacity: 1; transform: translateX(10px); }
-        .app-icon:active { transform: scale(0.98); }
-        
-        .ico-box { 
-            width: 70px; height: 70px; 
-            border: 1px solid var(--h-primary); border-radius: 12px; 
-            display: flex; align-items: center; justify-content: center; 
-            background: rgba(0, 243, 255, 0.05); 
-            box-shadow: 0 0 10px rgba(0,243,255,0.1); font-size: 2rem; 
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+        .btn-coin {
+            background: transparent; border: 2px solid #fff;
+            padding: 2vh 4vw; color: #fff;
+            font-family: var(--font-code); font-size: 2rem;
+            cursor: pointer; position: relative;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+            transition: 0.2s; border-radius: 4px;
         }
-        .app-name { 
-            font-size: 1.2rem; font-weight: 700; letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0,0,0,1); 
-        }
+        .btn-coin:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
+        .blink-text { animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
         /* =========================================
-           4. WINDOW SYSTEM
+           FRAME SELECTION UI
            ========================================= */
-        .window { 
-            position: absolute; background: var(--bg-win); 
-            border: 1px solid #444; border-radius: 8px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8); 
-            display: none; flex-direction: column; overflow: hidden;
-            animation: winOpen 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        #screen-frames {
+            justify-content: center; align-items: center; background: #080808; 
+            padding: 20px;
         }
-        .window.active { display: flex; z-index: 100; }
-        @keyframes winOpen { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .win-header { 
-            height: 40px; background: #1f1f1f; border-bottom: 1px solid #333; 
-            display: flex; align-items: center; padding: 0 15px; justify-content: space-between;
-            font-family: var(--font-code); font-size: 0.9rem; color: #888; cursor: default;
+        .frame-list {
+            display: flex; gap: 30px;
+            overflow-x: auto; 
+            padding: 40px 20px;
+            width: 100%;
+            justify-content: flex-start; /* iPad scroll fix */
+            align-items: center;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
-        .win-controls { display: flex; gap: 8px; }
-        .win-btn { width: 14px; height: 14px; border-radius: 50%; background: #444; cursor: pointer; }
-        .win-btn.close { background: var(--h-alert); }
-        .win-body { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
-
-        /* App Specific Windows */
-        #win-camera { 
-            inset: 40px 100px; /* Centered like a big app */
-            border: 1px solid var(--h-primary); 
-        }
-        #win-editor { 
-            inset: 20px 50px; 
-            border: 1px solid var(--h-sec); z-index: 110; 
-        }
+        .frame-list::-webkit-scrollbar { display: none; }
         
-        /* =========================================
-           5. CAMERA APP UI
-           ========================================= */
-        .cam-layout { display: flex; height: 100%; }
-        .cam-viewport { 
-            flex: 1; background: #000; position: relative; 
-            display: flex; justify-content: center; align-items: center; overflow: hidden; 
+        .mini-strip {
+            width: 160px; height: 420px; 
+            flex-shrink: 0;
+            display: flex; flex-direction: column;
+            padding: 15px 10px; cursor: pointer;
+            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            position: relative; border-radius: 2px;
         }
-        video#vid-stream { height: 100%; width: 100%; object-fit: cover; transform: scaleX(-1); }
+        .mini-strip:hover, .mini-strip:active { transform: translateY(-15px) scale(1.05); z-index: 10; box-shadow: 0 20px 30px rgba(0,0,0,0.7); }
         
-        /* Grid Overlay */
-        .cam-overlay { 
-            position: absolute; inset: 0; pointer-events: none; 
-            border: 20px solid #000; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.2); 
-            transition: 0.3s; 
-        }
-        .mode-4shot .cam-overlay { 
-            background: linear-gradient(90deg, transparent 49%, rgba(255,255,255,0.3) 50%, transparent 51%), 
-                        linear-gradient(0deg, transparent 49%, rgba(255,255,255,0.3) 50%, transparent 51%); 
-        }
+        /* Styles Reuse */
+        .strip-header { text-align: center; font-weight: 800; font-size: 0.9rem; margin-bottom: 10px; line-height: 1.1; white-space: nowrap; }
+        .strip-header span { display: block; font-weight: 400; font-size: 0.6rem; }
+        .strip-photos { flex: 1; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; }
+        .photo-slot { width: 100%; aspect-ratio: 4/3; background: #444; position: relative; overflow: hidden; }
+        .photo-slot::after { content: '📷'; position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size: 1.5rem; opacity: 0.2; }
+        .strip-footer { text-align: center; font-size: 0.6rem; margin-top: 10px; font-family: var(--font-code); opacity: 0.7; white-space: nowrap; }
 
-        .cam-sidebar { 
-            width: 120px; background: #111; border-left: 1px solid #333; 
-            display: flex; flex-direction: column; align-items: center; padding: 30px 0; gap: 20px; 
-        }
-        
-        /* Controls */
-        .ctrl-btn { 
-            width: 70px; height: 70px; border-radius: 50%; border: 2px solid #444; 
-            background: #222; color: #fff; font-size: 1.5rem; 
-            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; 
-        }
-        .ctrl-btn:active { transform: scale(0.9); }
-        .ctrl-btn.active { border-color: var(--h-primary); color: var(--h-primary); background: rgba(0,243,255,0.1); }
-        
-        .shutter-btn { 
-            width: 90px; height: 90px; border: 4px solid #fff; border-radius: 50%; 
-            padding: 4px; cursor: pointer; margin-top: auto; 
-        }
-        .shutter-inner { width: 100%; height: 100%; background: #fff; border-radius: 50%; transition: 0.1s; }
-        .shutter-btn:active .shutter-inner { transform: scale(0.85); background: var(--h-alert); }
-
-        #countdown-layer { 
-            position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); 
-            font-size: 15rem; font-weight: 900; color: #fff; 
-            text-shadow: 4px 4px 0 var(--h-primary); display: none; z-index: 50; 
-        }
+        .mini-strip.polaroid { background: #f8f8f8; color: #000; border: 1px solid #ddd; }
+        .mini-strip.disco { background: #111; color: #fff; border: 1px solid #333; background-image: radial-gradient(white 15%, transparent 16%), radial-gradient(white 15%, transparent 16%); background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+        .mini-strip.love { background: #fff; color: #000; border: 3px solid #ff0000; }
+        .mini-strip.system { background: #000; color: #0f0; border: 2px solid #0f0; font-family: var(--font-code); }
+        .mini-strip.black { background: #1a1a1a; color: #ccc; border: 1px solid #444; }
 
         /* =========================================
-           6. EDITOR UI
+           CAMERA UI (ENHANCED)
            ========================================= */
-        #editor-layout { display: flex; height: 100%; }
+        #screen-cam { justify-content: space-between; background: #000; }
         
-        /* Canvas Area */
-        .editor-canvas-area { 
-            flex: 1; background: #080808; 
-            display: flex; justify-content: center; align-items: center; 
-            position: relative; overflow: hidden;
-            background-image: radial-gradient(#222 1px, transparent 1px); background-size: 20px 20px; /* Dot pattern */
+        .ui-top {
+            height: 60px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 20px; background: #111; border-bottom: 1px solid #333;
+            font-family: var(--font-code); font-size: 1.2rem;
+            z-index: 20;
         }
-        canvas#main-canvas { 
-            max-height: 90%; max-width: 90%; 
-            box-shadow: 0 0 50px rgba(0,0,0,1); border: 1px solid #333; 
-        }
+        .rec-badge { color: var(--alert); display: flex; align-items: center; gap: 8px; font-weight: bold;}
+        .rec-dot { width: 10px; height: 10px; background: var(--alert); border-radius: 50%; }
 
-        /* Tools Area */
-        .editor-tools { 
-            width: 350px; background: #181818; border-left: 1px solid #333; 
-            display: flex; flex-direction: column; 
+        /* Tools Sidebar */
+        .cam-sidebar {
+            position: absolute; top: 70px; right: 10px; bottom: 140px;
+            width: 60px; display: flex; flex-direction: column; gap: 15px;
+            z-index: 50; pointer-events: none; /* Let clicks pass through if needed, but buttons need pointer-events:auto */
+        }
+        .tool-btn {
+            width: 50px; height: 50px; background: rgba(0,0,0,0.6); 
+            border: 1px solid #fff; border-radius: 50%; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; cursor: pointer; pointer-events: auto;
+            backdrop-filter: blur(5px);
+        }
+        .tool-btn.active { background: #fff; color: #000; }
+
+        .viewport { flex: 1; position: relative; overflow: hidden; background: #050505; display: flex; justify-content: center; align-items: center;}
+        video#video-feed { 
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+            transform: scaleX(-1); /* Default Mirror */
+            transition: filter 0.3s;
         }
         
-        /* Tabs */
-        .tool-tabs { display: flex; border-bottom: 1px solid #333; }
-        .tab-btn { 
-            flex: 1; padding: 15px; text-align: center; cursor: pointer; 
-            font-family: var(--font-code); color: #666; font-size: 0.9rem; transition: 0.2s;
+        /* Filters */
+        .filter-beauty { filter: contrast(1.05) brightness(1.1) saturate(1.1) blur(0.5px); }
+        .filter-bw { filter: grayscale(100%) contrast(1.2); }
+        .filter-film { filter: sepia(0.3) contrast(1.1) saturate(0.8); }
+        .filter-glitch { animation: glitchAnim 0.2s infinite; }
+        @keyframes glitchAnim { 
+            0% { transform: translate(0) scaleX(-1); } 
+            20% { transform: translate(-2px, 2px) scaleX(-1); } 
+            40% { transform: translate(-2px, -2px) scaleX(-1); } 
+            60% { transform: translate(2px, 2px) scaleX(-1); } 
+            80% { transform: translate(2px, -2px) scaleX(-1); } 
+            100% { transform: translate(0) scaleX(-1); } 
         }
-        .tab-btn.active { background: #222; color: var(--h-sec); border-bottom: 2px solid var(--h-sec); }
 
-        /* Panels */
-        .tool-panel { flex: 1; padding: 20px; display: none; overflow-y: auto; flex-direction: column; gap: 15px; }
-        .tool-panel.active { display: flex; }
-        
-        /* Filters List */
-        .filter-item { 
-            padding: 15px; background: #222; border: 1px solid #444; border-radius: 6px; 
-            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        #countdown {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            font-size: 15rem; font-weight: 800; color: #fff; display: none;
+            text-shadow: 4px 4px 0 #000; z-index: 100;
         }
-        .filter-item:hover { border-color: #fff; }
-        .filter-item.active { border-color: var(--h-primary); background: rgba(0,243,255,0.05); }
-        .filter-name { font-family: var(--font-code); }
 
-        /* Sticker Grid */
-        .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .sticker-btn { 
-            font-size: 2rem; background: #222; border-radius: 8px; padding: 10px; 
-            cursor: pointer; text-align: center; transition: 0.2s; 
+        .ui-controls {
+            height: 140px; background: #111; border-top: 1px solid #333;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            padding-bottom: 10px; z-index: 20;
         }
-        .sticker-btn:hover { background: #333; transform: scale(1.1); }
+        .filter-scroller {
+            display: flex; gap: 10px; overflow-x: auto; padding: 0 10px;
+            max-width: 40%; scrollbar-width: none;
+        }
+        .btn-filter {
+            min-width: 60px; height: 60px; background: #222; border: 1px solid #555;
+            color: #888; border-radius: 8px; cursor: pointer;
+            font-family: var(--font-code); display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+        }
+        .btn-filter.active { background: #fff; color: #000; box-shadow: 0 0 10px #fff; }
 
-        /* Action Footer */
-        .editor-footer { 
-            padding: 20px; border-top: 1px solid #333; background: #111;
-            display: flex; gap: 10px; 
+        .btn-shutter {
+            width: 80px; height: 80px; border: 4px solid #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            flex-shrink: 0; margin: 0 20px;
         }
-        .btn-full { 
-            flex: 1; padding: 15px; border: none; font-weight: bold; font-family: var(--font-ui);
-            cursor: pointer; font-size: 1rem; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-        }
-        .btn-cancel { background: #333; color: #fff; }
-        .btn-print { background: var(--h-primary); color: #000; }
-        .btn-print:hover { background: #fff; box-shadow: 0 0 20px var(--h-primary); }
+        .shutter-inner { width: 68px; height: 68px; background: #fff; border-radius: 50%; transition: 0.1s; }
+        .btn-shutter:active .shutter-inner { transform: scale(0.9); background: #ccc; }
 
         /* =========================================
-           7. VIRTUAL KEYBOARD
+           DECORATION / EDIT SCREEN (NEW)
            ========================================= */
-        #vkb-container { 
-            position: absolute; bottom: 0; left: 0; right: 0; height: 35vh; 
-            background: #0f0f0f; border-top: 2px solid var(--h-sec); z-index: 500;
-            display: flex; flex-direction: column; padding: 10px; 
-            transform: translateY(110%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        #screen-edit {
+            background: #111; flex-direction: column;
         }
-        #vkb-container.show { transform: translateY(0); }
+        .edit-area {
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            position: relative; overflow: hidden; background: #222;
+        }
+        #edit-canvas-container {
+            position: relative; 
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        .edit-toolbar {
+            height: 100px; background: #000; display: flex; align-items: center; justify-content: center; gap: 20px;
+            border-top: 1px solid #333;
+        }
+        .sticker-drawer {
+            position: absolute; bottom: 100px; left: 0; right: 0; height: 120px;
+            background: rgba(0,0,0,0.9); display: none;
+            overflow-x: auto; align-items: center; padding: 0 20px; gap: 20px;
+            border-top: 1px solid #444; z-index: 200;
+        }
+        .sticker-drawer.open { display: flex; }
+        .sticker-item { font-size: 3rem; cursor: pointer; transition: 0.2s; }
+        .sticker-item:active { transform: scale(1.2); }
         
-        .vkb-display { 
-            background: #000; color: var(--h-sec); font-family: var(--font-code); font-size: 2rem;
-            padding: 10px; margin-bottom: 10px; text-align: center; border: 1px solid #333;
-        }
-        .vkb-row { display: flex; justify-content: center; gap: 5px; flex: 1; margin-bottom: 5px; }
-        .vkb-key { 
-            background: #333; color: #fff; border-radius: 4px; flex: 1; margin: 0 2px;
-            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-            font-family: var(--font-code); cursor: pointer; box-shadow: 0 3px 0 #111;
-        }
-        .vkb-key:active { transform: translateY(3px); box-shadow: none; background: var(--h-sec); color: #000; }
-        .vkb-key.action { background: #555; font-size: 1rem; flex: 1.5; }
-        .vkb-key.enter { background: var(--h-primary); color: #000; flex: 2; font-weight: bold; }
-        .vkb-key.space { flex: 4; }
+        .drawing-layer { position: absolute; inset: 0; cursor: crosshair; touch-action: none; }
+        .placed-sticker { position: absolute; font-size: 4rem; user-select: none; cursor: grab; }
 
         /* =========================================
-           8. PRINT & QR MODAL
+           RESULT & PRINTER UI
            ========================================= */
-        #print-modal { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
-            display: none; align-items: center; justify-content: center; flex-direction: column; 
+        #screen-result { 
+            justify-content: center; align-items: center; background: #0a0a0a; 
+            flex-direction: row; gap: 4vw; padding: 20px;
         }
-        #print-modal.active { display: flex; }
         
-        .paper-out { 
-            width: 300px; background: #fff; padding: 15px; padding-bottom: 40px;
-            transform: translateY(-100vh); transition: 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        .printer-wrapper { position: relative; height: 70vh; aspect-ratio: 160/420; }
+        .printer-slot {
+            width: 100%; height: 100%;
+            border: 1px solid #333; border-top: 4px solid #111;
+            background: #000; overflow: hidden; position: relative;
+            box-shadow: 0 0 40px rgba(0,0,0,0.9); border-radius: 4px;
         }
-        .paper-out.drop { transform: translateY(0); }
-        .paper-out img { width: 100%; display: block; filter: contrast(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .preview-img { width: 100%; height: auto; display: block; transform: translateY(105%); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .printing-active { animation: printSlide 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        @keyframes printSlide { 0% { transform: translateY(105%); } 100% { transform: translateY(0); } }
+
+        .result-sidebar {
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+            opacity: 0; transition: opacity 1s ease 4s; width: 320px;
+        }
+        .result-sidebar.show { opacity: 1; }
+
+        .server-log {
+            font-family: var(--font-code); color: var(--accent); width: 100%;
+            background: #111; padding: 10px; border: 1px solid #333;
+            font-size: 0.9rem; margin-bottom: 5px;
+            white-space: pre-wrap; line-height: 1.4;
+        }
+        .loading-bar { height: 4px; background: #333; width: 100%; margin-top: 5px; position: relative; overflow: hidden; }
+        .loading-fill { position: absolute; left:0; top:0; bottom:0; background: var(--accent); width: 0%; transition: width 0.2s; }
+
+        .qr-container { background: #fff; padding: 10px; border-radius: 8px; text-align: center; display: none; }
+        .qr-container.show { display: block; animation: popIn 0.5s ease; }
+        .email-box { width: 100%; display: flex; gap: 5px; margin-top: 5px; }
+        .email-input { flex: 1; background: #222; border: 1px solid #444; color: #fff; padding: 8px; font-family: var(--font-ui); border-radius: 4px;}
         
-        .qr-section { margin-top: 30px; text-align: center; opacity: 0; transition: 1s 2s; }
-        .qr-section.show { opacity: 1; }
-        #qrcode { background: #fff; padding: 10px; border-radius: 8px; display: inline-block; }
-        .btn-restart { margin-top: 30px; padding: 15px 30px; background: transparent; border: 1px solid #fff; color: #fff; font-family: var(--font-code); cursor: pointer; }
-
-        /* =========================================
-           9. BOOT SCREEN
-           ========================================= */
-        #boot-screen { 
-            position: fixed; inset: 0; background: #000; z-index: 10000; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        .action-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 10px; }
+        .btn-action {
+            padding: 12px; font-family: var(--font-ui); font-weight: 700;
+            background: #fff; color: #000; border: none; cursor: pointer; font-size: 1rem;
+            width: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        .boot-text { font-family: var(--font-code); color: var(--h-primary); font-size: 1rem; line-height: 1.5; white-space: pre-wrap; width: 600px; }
-        .cursor-blink { animation: blink 0.5s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+        .btn-action.outline { background: transparent; border: 1px solid #fff; color: #fff; }
+        .print-control { display: flex; justify-content: space-between; align-items: center; width: 100%; background: #222; padding: 5px 15px; border-radius: 4px; margin-top: 5px;}
 
+        #flash { position: fixed; inset: 0; background: #fff; z-index: 9999; opacity: 0; pointer-events: none; }
+        .do-flash { animation: flashAnim 0.2s linear; }
+        @keyframes flashAnim { 0%,100%{opacity:0;} 50%{opacity:1;} }
+        
+        /* iPad / Mobile Responsiveness */
+        @media (max-width: 1024px) {
+            #screen-result { flex-direction: column; padding-top: 40px; justify-content: flex-start; overflow-y: auto;}
+            .printer-wrapper { height: 50vh; margin-bottom: 20px; flex-shrink: 0; }
+            .result-sidebar { width: 90%; transition-delay: 2s; padding-bottom: 40px; }
+            .action-btns { flex-direction: row; flex-wrap: wrap; }
+            .btn-action { flex: 1; min-width: 140px; }
+            .cam-sidebar { right: 20px; top: 80px; }
+            .tool-btn { width: 60px; height: 60px; font-size: 1.4rem; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="layer-crt"></div>
-    <div id="layer-vignette"></div>
+    <div id="monitor">
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
 
-    <div id="boot-screen">
-        <div class="boot-text" id="boot-log"></div>
-    </div>
-
-    <div id="desktop">
-        <div class="sys-bar">
-            <span>SENA OS v4.0 [LANDSCAPE_EDITION]</span>
-            <span id="clock">00:00</span>
+        <div id="screen-boot" class="screen active">
+            <div id="boot-log"></div>
+            <span class="blink-text">_</span>
         </div>
 
-        <div class="icon-grid">
-            <div class="app-icon" onclick="Sys.openApp('camera')">
-                <div class="ico-box">📷</div>
-                <div class="app-name">PHOTO_CAPTURE</div>
-            </div>
-            <div class="app-icon" onclick="alert('SYSTEM LOCKED')">
-                <div class="ico-box" style="border-color:#555; color:#555">📂</div>
-                <div class="app-name" style="color:#555">ARCHIVES</div>
-            </div>
-             <div class="app-icon" onclick="location.reload()">
-                <div class="ico-box" style="border-color:var(--h-alert); color:var(--h-alert)">🔌</div>
-                <div class="app-name" style="color:var(--h-alert)">REBOOT</div>
-            </div>
+        <div id="screen-home" class="screen">
+            <button style="position:absolute; top:20px; right:20px; background:none; border:none; color:#333; font-size:2rem;" onclick="toggleFullscreen()">⛶</button>
+            <div class="main-title">SENA<br>PHOTOBOOTH</div>
+            <button class="btn-coin" onclick="OS.start()">
+                <span class="blink-text">TOUCH TO START</span>
+            </button>
+            <p style="margin-top:20px; font-family:var(--font-code); color:#666;">PRO EDITION v3.0</p>
         </div>
-    </div>
 
-    <div id="win-camera" class="window">
-        <div class="win-header">
-            <span>// CAM_MODULE.EXE</span>
-            <div class="win-controls"><div class="win-btn close" onclick="Sys.closeApp('camera')"></div></div>
-        </div>
-        <div class="win-body">
-            <div class="cam-layout">
-                <div class="cam-viewport">
-                    <video id="vid-stream" autoplay playsinline muted></video>
-                    <div id="cam-overlay" class="cam-overlay"></div>
-                    <div id="countdown-layer">3</div>
+        <div id="screen-frames" class="screen">
+            <h2 style="font-family:var(--font-code); color:#fff; margin-bottom:10px; text-align:center;">SELECT THEME</h2>
+            
+            <div class="frame-list">
+                <div class="mini-strip polaroid" onclick="OS.selectFrame('polaroid')">
+                    <div class="strip-header">SENA<br><span>PHOTOBOOTH</span></div>
+                    <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
+                    <div class="strip-footer">CLEAN WHITE</div>
                 </div>
+                <div class="mini-strip disco" onclick="OS.selectFrame('disco')">
+                    <div class="strip-header">🪩 SENA 🪩<br><span>DISCO</span></div>
+                    <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
+                    <div class="strip-footer">NIGHT VIBE</div>
+                </div>
+                <div class="mini-strip love" onclick="OS.selectFrame('love')">
+                    <div class="strip-header">I ♥ SENA</div>
+                    <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
+                    <div class="strip-footer">LOVER</div>
+                </div>
+                <div class="mini-strip system" onclick="OS.selectFrame('system')">
+                    <div class="strip-header">SYS.LOG</div>
+                    <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
+                    <div class="strip-footer">CYBERPUNK</div>
+                </div>
+                <div class="mini-strip black" onclick="OS.selectFrame('black')">
+                    <div class="strip-header">SENA<br><span>CLASSIC</span></div>
+                    <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
+                    <div class="strip-footer">DARK MODE</div>
+                </div>
+            </div>
+            
+            <button class="btn-action outline" style="width:200px; margin:0 auto;" onclick="location.reload()">← BACK</button>
+        </div>
+
+        <div id="screen-cam" class="screen">
+            <div class="ui-top">
+                <div class="rec-badge"><div class="rec-dot"></div> REC</div>
+                <div id="clock">00:00</div>
+            </div>
+            
+            <div class="viewport">
+                <video id="video-feed" autoplay playsinline muted></video>
+                <div id="countdown">3</div>
+                
                 <div class="cam-sidebar">
-                    <div class="ctrl-btn" id="btn-mode-strip" onclick="Cam.setMode('strip')">I</div>
-                    <div class="ctrl-btn" id="btn-mode-grid" onclick="Cam.setMode('grid')">田</div>
-                    <div style="flex:1"></div>
-                    <div class="shutter-btn" onclick="Cam.snap()">
-                        <div class="shutter-inner"></div>
+                    <div class="tool-btn" onclick="OS.toggleCamFlip()">↻</div>
+                    <div class="tool-btn" onclick="OS.toggleTimer()" id="btn-timer">3s</div>
+                    <div class="tool-btn" onclick="OS.toggleFlash()">⚡</div>
+                    <div class="tool-btn" onclick="OS.toggleMirror()">↔</div>
+                    <div class="tool-btn" onclick="OS.toggleGrid()">#</div>
+                </div>
+            </div>
+
+            <div class="ui-controls">
+                <div class="filter-scroller">
+                    <button class="btn-filter active" onclick="OS.filter('normal', this)">NORM</button>
+                    <button class="btn-filter" onclick="OS.filter('beauty', this)">SOFT</button>
+                    <button class="btn-filter" onclick="OS.filter('bw', this)">B/W</button>
+                    <button class="btn-filter" onclick="OS.filter('film', this)">FILM</button>
+                    <button class="btn-filter" onclick="OS.filter('glitch', this)">GLITCH</button>
+                </div>
+
+                <div class="btn-shutter" onclick="OS.snap()">
+                    <div class="shutter-inner"></div>
+                </div>
+                
+                <div style="width: 20px;"></div> </div>
+        </div>
+
+        <div id="screen-edit" class="screen">
+            <div class="ui-top">
+                <div style="font-family:var(--font-code);">EDIT MODE</div>
+                <button class="btn-action outline" style="width:auto; padding:5px 15px; font-size:0.8rem;" onclick="OS.finishEdit()">DONE & PRINT ></button>
+            </div>
+            <div class="edit-area">
+                <div id="edit-canvas-container">
+                    <canvas id="edit-canvas-layer" class="drawing-layer"></canvas>
+                </div>
+                <div class="sticker-drawer" id="sticker-drawer">
+                    <div class="sticker-item" onclick="OS.addSticker('❤️')">❤️</div>
+                    <div class="sticker-item" onclick="OS.addSticker('✨')">✨</div>
+                    <div class="sticker-item" onclick="OS.addSticker('🔥')">🔥</div>
+                    <div class="sticker-item" onclick="OS.addSticker('👑')">👑</div>
+                    <div class="sticker-item" onclick="OS.addSticker('🎀')">🎀</div>
+                    <div class="sticker-item" onclick="OS.addSticker('💋')">💋</div>
+                    <div class="sticker-item" onclick="OS.addSticker('🕶️')">🕶️</div>
+                    <div class="sticker-item" onclick="OS.addSticker('🌈')">🌈</div>
+                </div>
+            </div>
+            <div class="edit-toolbar">
+                <button class="tool-btn" onclick="OS.toggleStickerDrawer()">☺</button>
+                <button class="tool-btn" onclick="OS.togglePen()" id="btn-pen">✎</button>
+                <button class="tool-btn" style="color:var(--alert); border-color:var(--alert);" onclick="OS.clearDraw()">🗑</button>
+                <button class="tool-btn" onclick="OS.retake()">↺</button>
+            </div>
+        </div>
+
+        <div id="screen-result" class="screen">
+            <div class="printer-wrapper">
+                <div class="printer-slot">
+                    <img id="final-img" class="preview-img" alt="Print">
+                </div>
+            </div>
+
+            <div class="result-sidebar" id="res-sidebar">
+                
+                <div class="server-log" id="server-status">
+                    <div id="log-text">> UPLOADING...</div>
+                    <div class="loading-bar"><div class="loading-fill" id="load-fill"></div></div>
+                </div>
+
+                <div class="qr-container" id="qr-box">
+                    <div id="qrcode" style="display:flex;justify-content:center;"></div>
+                    <div style="font-size:0.8rem; color:#000; margin-top:5px; font-weight:bold;">SCAN TO DOWNLOAD</div>
+                </div>
+
+                <div class="print-control">
+                    <span style="color:#aaa; font-size:0.8rem;">COPIES</span>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="tool-btn" style="width:30px; height:30px; font-size:1rem;" onclick="OS.adjCopies(-1)">-</button>
+                        <span id="copy-count" style="font-family:var(--font-code); font-size:1.2rem;">1</span>
+                        <button class="tool-btn" style="width:30px; height:30px; font-size:1rem;" onclick="OS.adjCopies(1)">+</button>
                     </div>
+                </div>
+
+                <div class="email-box">
+                    <input type="email" placeholder="Enter Email" class="email-input">
+                    <button class="btn-action" style="width:auto; padding:0 15px;" onclick="alert('Sent!')">SEND</button>
+                </div>
+                
+                <div class="action-btns">
+                    <button class="btn-action" onclick="OS.download()">SAVE IMAGE</button>
+                    <button class="btn-action outline" onclick="OS.restart()">HOME</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="win-editor" class="window">
-        <div class="win-header">
-            <span>// EDITOR_SUITE.EXE</span>
-            <div class="win-controls"></div>
-        </div>
-        <div class="win-body">
-            <div id="editor-layout">
-                <div class="editor-canvas-area">
-                    <canvas id="main-canvas"></canvas>
-                </div>
-                <div class="editor-tools">
-                    <div class="tool-tabs">
-                        <div class="tab-btn active" onclick="Editor.setTab('filters', this)">FILTERS</div>
-                        <div class="tab-btn" onclick="Editor.setTab('stickers', this)">STICKERS</div>
-                        <div class="tab-btn" onclick="Editor.setTab('text', this)">TEXT</div>
-                    </div>
-
-                    <div id="panel-filters" class="tool-panel active">
-                        <div class="filter-item active" onclick="Editor.setFilter('normal', this)">
-                            <span class="filter-name">NORMAL</span>
-                        </div>
-                        <div class="filter-item" onclick="Editor.setFilter('bw', this)">
-                            <span class="filter-name">MONO_CRUNCH</span>
-                            <span style="font-size:0.8rem; color:#666">B/W</span>
-                        </div>
-                        <div class="filter-item" onclick="Editor.setFilter('cyber', this)">
-                            <span class="filter-name">CYBER_PUNK</span>
-                            <span style="font-size:0.8rem; color:var(--h-primary)">TEAL</span>
-                        </div>
-                        <div class="filter-item" onclick="Editor.setFilter('matrix', this)">
-                            <span class="filter-name">MATRIX_CODE</span>
-                            <span style="font-size:0.8rem; color:#0f0">GREEN</span>
-                        </div>
-                        <div class="filter-item" onclick="Editor.setFilter('love', this)">
-                            <span class="filter-name">SWEET_HEART</span>
-                            <span style="font-size:0.8rem; color:pink">PINK</span>
-                        </div>
-                    </div>
-
-                    <div id="panel-stickers" class="tool-panel">
-                        <div class="sticker-grid">
-                            <div class="sticker-btn" onclick="Editor.addSticker('💖')">💖</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('🔥')">🔥</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('👽')">👽</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('✨')">✨</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('🦋')">🦋</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('🎀')">🎀</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('🌈')">🌈</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('🧸')">🧸</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('💢')">💢</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('💤')">💤</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('👑')">👑</div>
-                            <div class="sticker-btn" onclick="Editor.addSticker('☠️')">☠️</div>
-                        </div>
-                        <button class="btn-full btn-cancel" onclick="Editor.clearStickers()" style="margin-top:10px">CLEAR ALL</button>
-                    </div>
-
-                    <div id="panel-text" class="tool-panel">
-                        <p style="color:#666; font-size:0.8rem">CUSTOM MESSAGE:</p>
-                        <button class="btn-full" style="background:#fff; color:#000; margin-bottom:10px" onclick="VirtKB.open()">OPEN KEYBOARD</button>
-                        <button class="btn-full btn-cancel" onclick="Editor.setText('')">CLEAR TEXT</button>
-                    </div>
-
-                    <div style="flex:1"></div>
-                    
-                    <div class="editor-footer">
-                        <button class="btn-full btn-cancel" onclick="Sys.reboot()">DISCARD</button>
-                        <button class="btn-full btn-print" onclick="Editor.print()">PRINT >></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="vkb-container">
-        <div class="vkb-display" id="vkb-input"></div>
-        <div class="vkb-row">
-            <div class="vkb-key" onclick="VirtKB.type('Q')">Q</div>
-            <div class="vkb-key" onclick="VirtKB.type('W')">W</div>
-            <div class="vkb-key" onclick="VirtKB.type('E')">E</div>
-            <div class="vkb-key" onclick="VirtKB.type('R')">R</div>
-            <div class="vkb-key" onclick="VirtKB.type('T')">T</div>
-            <div class="vkb-key" onclick="VirtKB.type('Y')">Y</div>
-            <div class="vkb-key" onclick="VirtKB.type('U')">U</div>
-            <div class="vkb-key" onclick="VirtKB.type('I')">I</div>
-            <div class="vkb-key" onclick="VirtKB.type('O')">O</div>
-            <div class="vkb-key" onclick="VirtKB.type('P')">P</div>
-        </div>
-        <div class="vkb-row">
-            <div class="vkb-key" onclick="VirtKB.type('A')">A</div>
-            <div class="vkb-key" onclick="VirtKB.type('S')">S</div>
-            <div class="vkb-key" onclick="VirtKB.type('D')">D</div>
-            <div class="vkb-key" onclick="VirtKB.type('F')">F</div>
-            <div class="vkb-key" onclick="VirtKB.type('G')">G</div>
-            <div class="vkb-key" onclick="VirtKB.type('H')">H</div>
-            <div class="vkb-key" onclick="VirtKB.type('J')">J</div>
-            <div class="vkb-key" onclick="VirtKB.type('K')">K</div>
-            <div class="vkb-key" onclick="VirtKB.type('L')">L</div>
-        </div>
-        <div class="vkb-row">
-            <div class="vkb-key action" onclick="VirtKB.close()">EXIT</div>
-            <div class="vkb-key" onclick="VirtKB.type('Z')">Z</div>
-            <div class="vkb-key" onclick="VirtKB.type('X')">X</div>
-            <div class="vkb-key" onclick="VirtKB.type('C')">C</div>
-            <div class="vkb-key space" onclick="VirtKB.type(' ')">SPACE</div>
-            <div class="vkb-key" onclick="VirtKB.type('V')">V</div>
-            <div class="vkb-key" onclick="VirtKB.type('B')">B</div>
-            <div class="vkb-key" onclick="VirtKB.type('N')">N</div>
-            <div class="vkb-key" onclick="VirtKB.type('M')">M</div>
-            <div class="vkb-key enter" onclick="VirtKB.confirm()">ENTER</div>
-        </div>
-    </div>
-
-    <div id="print-modal">
-        <div class="paper-out" id="paper-slot">
-            <img id="final-img">
-            <div style="text-align:center; font-family:var(--font-code); font-size:0.7rem; margin-top:10px; color:#000;">
-                SENA OS v4.0 • TERMINAL_ID_01
-            </div>
-        </div>
-        <div class="qr-section" id="qr-container">
-            <div id="qrcode"></div>
-            <div style="color:#fff; font-family:var(--font-code); margin-top:10px;">SCAN TO DOWNLOAD</div>
-            <button class="btn-restart" onclick="location.reload()">START NEW SESSION</button>
-        </div>
-    </div>
+    <div id="flash"></div>
+    <canvas id="hidden-canvas" style="display:none"></canvas> 
 
     <script>
-        /**
-         * SENA OS 4.0 CORE KERNEL
-         * Designed for iPad Landscape Web App
-         */
-
-        // --- 1. AUDIO ENGINE (Simple Oscillation) ---
-        const Sfx = (function() {
-            let ctx = null;
-            function init() { if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); }
-            
-            function play(type) {
-                if(!ctx) init();
-                if(ctx.state === 'suspended') ctx.resume();
-                const t = ctx.currentTime;
-                const o = ctx.createOscillator();
-                const g = ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                
-                if(type==='click') {
-                    o.frequency.value = 1200; o.type = 'sine';
-                    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.1);
-                    o.start(); o.stop(t+0.1);
-                } else if(type==='boot') {
-                    o.frequency.value = 110; o.type = 'sawtooth';
-                    o.frequency.linearRampToValueAtTime(880, t+0.5);
-                    g.gain.value = 0.1;
-                    o.start(); o.stop(t+1.5);
-                } else if(type==='snap') {
-                    o.frequency.value = 100; o.type = 'square';
-                    g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.2);
-                    o.start(); o.stop(t+0.2);
-                }
+        // Fullscreen Toggle for iPad/Kiosk
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e=>{});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
             }
-            return { play, init };
-        })();
+        }
 
-        // --- 2. SYSTEM MANAGER ---
-        const Sys = (function() {
-            const els = {
-                boot: document.getElementById('boot-screen'),
-                log: document.getElementById('boot-log'),
-                desk: document.getElementById('desktop'),
-                clock: document.getElementById('clock')
+        const OS = (function() {
+            
+            // --- CONFIGURATION ---
+            // ใส่ API KEY ของ imgbb ที่นี่ (ถ้ามี) ถ้าไม่มีจะใช้ Demo Mode
+            const API_KEY = 'YOUR_IMGBB_API_KEY'; 
+
+            const C = {
+                w: 1280, h: 720,
+                stripW: 600,
+                shots: 3, 
+                quotes: ["SENA PRO", "GOOD VIBES", "MEMORIES", "ICONIC", "KEEP SMILING"]
             };
-            
-            async function bootSequence() {
-                const logs = [
-                    "SENA KERNEL v4.0.12 INITIALIZING...",
-                    "CPU: A-SERIES NEURAL ENGINE DETECTED",
-                    "LOADING MODULES: [CAM] [GPU] [TOUCH]",
-                    "MOUNTING FILE SYSTEM... OK",
-                    "STARTING GUI SERVER..."
-                ];
-                
-                let text = "";
-                for(let l of logs) {
-                    text += `> ${l}\n`;
-                    els.log.innerText = text + "_";
-                    await new Promise(r => setTimeout(r, 400));
-                }
-                Sfx.play('boot');
-                await new Promise(r => setTimeout(r, 800));
-                
-                els.boot.style.display = 'none';
-                els.desk.classList.add('active');
-                startClock();
-            }
 
-            function startClock() {
+            // --- STATE ---
+            let s = { 
+                filter: 'normal', 
+                frame: 'polaroid',
+                photos: [], 
+                stream: null, 
+                processing: false,
+                timer: 3,
+                flash: true,
+                facingMode: 'user',
+                mirror: true,
+                copies: 1,
+                stickers: [], // {x,y,char}
+                isDrawing: false,
+                penEnabled: false
+            };
+
+            // --- DOM ELEMENTS ---
+            const D = {
+                screens: {
+                    boot: document.getElementById('screen-boot'),
+                    home: document.getElementById('screen-home'),
+                    frames: document.getElementById('screen-frames'),
+                    cam: document.getElementById('screen-cam'),
+                    edit: document.getElementById('screen-edit'),
+                    res: document.getElementById('screen-result')
+                },
+                video: document.getElementById('video-feed'),
+                canvas: document.getElementById('hidden-canvas'),
+                count: document.getElementById('countdown'),
+                flash: document.getElementById('flash'),
+                final: document.getElementById('final-img'),
+                btnTimer: document.getElementById('btn-timer'),
+                editContainer: document.getElementById('edit-canvas-container'),
+                editLayer: document.getElementById('edit-canvas-layer'),
+                stickerDrawer: document.getElementById('sticker-drawer'),
+                btnPen: document.getElementById('btn-pen')
+            };
+
+            // --- AUDIO ENGINE ---
+            const Aud = {
+                ctx: null,
+                init: function() { if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
+                play: function(type) {
+                    this.init();
+                    if(this.ctx.state === 'suspended') this.ctx.resume();
+                    const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                    o.connect(g); g.connect(this.ctx.destination);
+                    
+                    const t = this.ctx.currentTime;
+                    if(type === 'coin') { 
+                        o.frequency.setValueAtTime(1200, t); 
+                        o.frequency.exponentialRampToValueAtTime(1800, t+0.1);
+                        g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.4);
+                        o.start(t); o.stop(t+0.4); 
+                    }
+                    else if(type === 'beep') { 
+                        o.type='square'; o.frequency.value = 800; g.gain.value = 0.05; 
+                        o.start(t); o.stop(t+0.1); 
+                    }
+                    else if(type === 'shutter') { 
+                        const noise = this.ctx.createBufferSource();
+                        const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
+                        const data = buffer.getChannelData(0);
+                        for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
+                        noise.buffer = buffer; noise.connect(g);
+                        g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.1);
+                        noise.start(t);
+                    }
+                },
+                speak: function(text) {
+                    if('speechSynthesis' in window) {
+                        const u = new SpeechSynthesisUtterance(text);
+                        u.rate = 1.2; u.pitch = 1.1;
+                        window.speechSynthesis.speak(u);
+                    }
+                }
+            };
+
+            // --- INITIALIZATION ---
+            window.onload = async () => {
+                const logs = ["SENA OS PRO v3.0", "LOADING ASSETS...", "INIT CAMERA...", "SYSTEM READY."];
+                const logDiv = document.getElementById('boot-log');
+                for(let l of logs) { 
+                    logDiv.innerHTML += l + "<br>"; 
+                    await new Promise(r => setTimeout(r, 300)); 
+                }
+                setTimeout(() => { switchScreen('home'); }, 500);
+                
+                // Clock
                 setInterval(() => {
                     const d = new Date();
-                    els.clock.innerText = d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0');
+                    document.getElementById('clock').innerText = d.getHours().toString().padStart(2,'0')+":"+d.getMinutes().toString().padStart(2,'0');
                 }, 1000);
+
+                // Setup Draw Layer
+                setupDrawing();
+            };
+
+            function switchScreen(name) {
+                Object.values(D.screens).forEach(s => s.classList.remove('active'));
+                D.screens[name].classList.add('active');
             }
 
-            function openApp(id) {
-                Sfx.play('click');
-                document.getElementById('win-'+id).classList.add('active');
-                if(id === 'camera') Cam.init();
+            // --- MAIN ACTIONS ---
+            async function start() {
+                Aud.play('coin');
+                switchScreen('frames');
             }
 
-            function closeApp(id) {
-                Sfx.play('click');
-                document.getElementById('win-'+id).classList.remove('active');
-                if(id === 'camera') Cam.stop();
+            async function selectFrame(type) {
+                s.frame = type;
+                Aud.play('beep');
+                await initCamera();
+                switchScreen('cam');
             }
 
-            return { boot: bootSequence, openApp, closeApp, reboot: ()=>location.reload() };
-        })();
-
-        // --- 3. CAMERA MODULE ---
-        const Cam = (function() {
-            let stream = null;
-            let mode = 'strip'; // strip, grid
-            let photos = [];
-            const vid = document.getElementById('vid-stream');
-            const overlay = document.getElementById('cam-overlay');
-            const cnt = document.getElementById('countdown-layer');
-
-            async function init() {
+            async function initCamera() {
+                if(s.stream) s.stream.getTracks().forEach(t=>t.stop());
                 try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 1280, height: 720 } });
-                    vid.srcObject = stream;
-                } catch(e) { alert("Camera Permission Denied"); }
+                    s.stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: s.facingMode, width: {ideal: 1920}, height: {ideal: 1080} },
+                        audio: false
+                    });
+                    D.video.srcObject = s.stream;
+                    updateMirror();
+                } catch(e) { alert("Camera Error: " + e.message); }
             }
 
-            function stop() { if(stream) stream.getTracks().forEach(t=>t.stop()); }
+            // --- CAMERA TOOLS ---
+            function toggleCamFlip() {
+                s.facingMode = (s.facingMode === 'user') ? 'environment' : 'user';
+                initCamera();
+            }
+            function toggleTimer() {
+                const timers = [3, 5, 10];
+                let idx = timers.indexOf(s.timer);
+                s.timer = timers[(idx+1) % timers.length];
+                D.btnTimer.innerText = s.timer + "s";
+                Aud.play('beep');
+            }
+            function toggleFlash() { s.flash = !s.flash; Aud.play('beep'); }
+            function toggleMirror() { s.mirror = !s.mirror; updateMirror(); }
+            function toggleGrid() { D.video.parentElement.classList.toggle('grid-on'); Aud.play('beep'); }
             
-            function setMode(m) {
-                Sfx.play('click');
-                mode = m;
-                document.getElementById('btn-mode-strip').classList.toggle('active', m==='strip');
-                document.getElementById('btn-mode-grid').classList.toggle('active', m==='grid');
-                if(m==='grid') overlay.classList.add('mode-4shot');
-                else overlay.classList.remove('mode-4shot');
+            function updateMirror() {
+                // If user facing + mirror ON -> flip. If environment, usually don't flip.
+                if(s.mirror) D.video.style.transform = "scaleX(-1)";
+                else D.video.style.transform = "scaleX(1)";
             }
 
-            async function snap() {
-                photos = [];
-                const shots = (mode === 'strip') ? 3 : 4;
+            function filter(mode, btn) {
+                s.filter = mode;
+                document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
                 
-                for(let i=0; i<shots; i++) {
-                    await countdown(3);
-                    Sfx.play('snap');
-                    
-                    // Flash
-                    const f = document.createElement('div');
-                    f.style.position='fixed'; f.style.inset='0'; f.style.background='#fff'; f.style.zIndex='9999';
-                    document.body.appendChild(f);
-                    setTimeout(()=>f.remove(), 100);
-                    
-                    // Capture
-                    const c = document.createElement('canvas');
-                    c.width = vid.videoWidth; c.height = vid.videoHeight;
-                    const ctx = c.getContext('2d');
-                    ctx.translate(c.width, 0); ctx.scale(-1, 1);
-                    ctx.drawImage(vid, 0, 0);
-                    photos.push(c);
+                let css = 'none';
+                if(mode==='beauty') css = 'contrast(1.05) brightness(1.1) saturate(1.1) blur(0.5px)';
+                if(mode==='bw') css = 'grayscale(100%) contrast(1.2)';
+                if(mode==='film') css = 'sepia(0.3) contrast(1.1) saturate(0.8)';
+                D.video.style.filter = css;
+                
+                if(mode==='glitch') D.video.classList.add('filter-glitch');
+                else D.video.classList.remove('filter-glitch');
+                
+                Aud.play('beep');
+            }
 
-                    await new Promise(r => setTimeout(r, 1000));
+            // --- CAPTURE LOGIC ---
+            async function snap() {
+                if(s.processing) return;
+                s.processing = true; s.photos = [];
+                
+                for(let i=0; i<C.shots; i++) {
+                    await countdown(s.timer);
+                    await capture();
+                    await new Promise(r => setTimeout(r, 800));
                 }
                 
-                Sys.closeApp('camera');
-                Sys.openApp('editor');
-                setTimeout(() => Editor.load(photos, mode), 500);
+                s.processing = false;
+                prepareEditMode();
             }
 
             function countdown(n) {
                 return new Promise(r => {
-                    let c = n; cnt.style.display='block'; cnt.innerText=c;
-                    const t = setInterval(()=>{
-                        c--; Sfx.play('click');
-                        if(c>0) cnt.innerText=c;
-                        else { clearInterval(t); cnt.style.display='none'; r(); }
+                    let c = n; D.count.style.display = 'block'; D.count.innerText = c;
+                    Aud.speak(c.toString());
+                    const t = setInterval(() => {
+                        Aud.play('beep'); c--;
+                        if(c>0) { 
+                            D.count.innerText = c; 
+                            if(c<=3) Aud.speak(c.toString()); 
+                        } else { 
+                            clearInterval(t); D.count.style.display = 'none'; 
+                            Aud.speak("Cheese!");
+                            r(); 
+                        }
                     }, 1000);
                 });
             }
 
-            return { init, stop, setMode, snap };
-        })();
-
-        // --- 4. EDITOR ENGINE (Heavy Logic) ---
-        const Editor = (function() {
-            const canvas = document.getElementById('main-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // State
-            let rawPhotos = [];
-            let currentMode = '';
-            let filter = 'normal';
-            let stickers = []; // {t: text, x, y, r}
-            let customText = '';
-            
-            // Config
-            const W_STRIP = 600; 
-            const W_GRID = 1200; 
-            const P_H = 450; // 4:3 Aspect
-            const GAP = 30;
-
-            function load(photos, mode) {
-                rawPhotos = photos; currentMode = mode;
-                stickers = []; customText = ''; filter = 'normal';
-                
-                // Canvas Size Setup
-                if(mode === 'strip') {
-                    canvas.width = W_STRIP;
-                    canvas.height = 300 + (3*P_H) + (2*GAP) + 200; // Header + 3Photos + Footer
-                } else {
-                    canvas.width = W_GRID;
-                    canvas.height = 300 + (2*P_H) + GAP + 200; // Header + 2Rows + Footer
-                }
-                render();
-            }
-
-            function render() {
-                const w = canvas.width; const h = canvas.height;
-                
-                // 1. Background Fill
-                ctx.fillStyle = '#f5f5f5';
-                if(filter === 'cyber') ctx.fillStyle = '#050505';
-                if(filter === 'matrix') ctx.fillStyle = '#001100';
-                if(filter === 'love') ctx.fillStyle = '#fff0f5';
-                ctx.fillRect(0,0,w,h);
-
-                // 2. Draw Header
-                ctx.textAlign = 'center'; 
-                if(filter === 'cyber') {
-                    ctx.fillStyle = '#00f3ff'; ctx.font = 'bold 80px Rajdhani'; ctx.fillText('SENA OS', w/2, 120);
-                } else if(filter === 'matrix') {
-                    ctx.fillStyle = '#0f0'; ctx.font = '60px monospace'; ctx.fillText('SYSTEM_LOG', w/2, 120);
-                } else {
-                    ctx.fillStyle = '#111'; ctx.font = 'bold 80px Rajdhani'; ctx.fillText('SENA', w/2, 100);
-                    ctx.font = '40px Rajdhani'; ctx.fillText('PHOTOBOOTH', w/2, 150);
-                }
-
-                // 3. Draw Photos
-                rawPhotos.forEach((img, i) => {
-                    let x, y, pw=600, ph=450; // Default Strip
-                    if(currentMode === 'strip') {
-                        x = (w-pw)/2;
-                        y = 250 + i*(ph+GAP);
-                    } else {
-                        // Grid 2x2
-                        pw = 580; ph = 435;
-                        let col = i%2; let row = Math.floor(i/2);
-                        x = 15 + col*(pw+10);
-                        y = 250 + row*(ph+10);
+            function capture() {
+                return new Promise(r => {
+                    Aud.play('shutter');
+                    if(s.flash) {
+                        D.flash.classList.add('do-flash');
+                        setTimeout(() => D.flash.classList.remove('do-flash'), 200);
                     }
                     
-                    // Draw Frame Border
-                    ctx.save();
-                    if(filter === 'bw') { ctx.filter = 'grayscale(100%) contrast(1.2)'; }
-                    if(filter === 'cyber') { ctx.filter = 'contrast(1.2) hue-rotate(180deg)'; ctx.strokeStyle='#00f3ff'; ctx.lineWidth=4; ctx.strokeRect(x,y,pw,ph); }
-                    if(filter === 'matrix') { ctx.filter = 'grayscale(100%) sepia(100%) hue-rotate(90deg)'; ctx.strokeStyle='#0f0'; ctx.lineWidth=2; ctx.strokeRect(x,y,pw,ph); }
+                    const cvs = document.createElement('canvas');
+                    // Capture actual video resolution
+                    cvs.width = D.video.videoWidth; cvs.height = D.video.videoHeight;
+                    const ctx = cvs.getContext('2d');
                     
-                    ctx.drawImage(img, x, y, pw, ph);
-                    ctx.restore();
+                    // Handle Mirroring for Capture
+                    if(s.mirror) {
+                        ctx.translate(cvs.width, 0); ctx.scale(-1, 1);
+                    }
+                    ctx.drawImage(D.video, 0, 0);
+                    
+                    // Apply Filters (Basic Canvas manip)
+                    ctx.setTransform(1,0,0,1,0,0); // Reset for filtering
+                    if(s.filter !== 'normal' && s.filter !== 'glitch') {
+                        // Apply simplistic filter logic if needed, 
+                        // or just rely on CSS filter on video (but CSS filter doesn't save to canvas ctx easily without libraries).
+                        // For simplicity in this vanilla file, we apply basic color matrix.
+                        const id = ctx.getImageData(0,0,cvs.width,cvs.height);
+                        const d = id.data;
+                        for(let i=0; i<d.length; i+=4) {
+                            let R=d[i], G=d[i+1], B=d[i+2];
+                            if(s.filter === 'bw') {
+                                const v = 0.299*R + 0.587*G + 0.114*B; d[i]=d[i+1]=d[i+2]=v;
+                            } else if(s.filter === 'film') {
+                                d[i] = R*0.393+G*0.769+B*0.189; d[i+1] = R*0.349+G*0.686+B*0.168; d[i+2] = R*0.272+G*0.534+B*0.131;
+                            }
+                        }
+                        ctx.putImageData(id, 0, 0);
+                    }
+                    
+                    s.photos.push(cvs);
+                    setTimeout(r, 200);
                 });
-
-                // 4. Draw Stickers
-                ctx.textAlign = 'center'; ctx.textBaseline='middle'; ctx.font='80px serif';
-                stickers.forEach(s => {
-                    ctx.fillText(s.t, s.x, s.y);
-                });
-
-                // 5. Draw Custom Text
-                if(customText) {
-                    ctx.fillStyle = (filter==='cyber'?'#ff00ff':'#333');
-                    ctx.font = 'bold 50px monospace';
-                    ctx.fillText(customText, w/2, h - 120);
-                }
-
-                // 6. Footer Date
-                ctx.font = '24px monospace'; ctx.fillStyle = '#888';
-                ctx.fillText(new Date().toLocaleString(), w/2, h-40);
             }
 
-            // Public Methods
-            return {
-                load,
-                setTab: (name, el) => {
-                    Sfx.play('click');
-                    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-                    el.classList.add('active');
-                    document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));
-                    document.getElementById('panel-'+name).classList.add('active');
-                },
-                setFilter: (name, el) => {
-                    Sfx.play('click');
-                    filter = name;
-                    document.querySelectorAll('.filter-item').forEach(b=>b.classList.remove('active'));
-                    el.classList.add('active');
-                    render();
-                },
-                addSticker: (emoji) => {
-                    // Random pos inside center area
-                    const x = canvas.width/2 + (Math.random()*200-100);
-                    const y = canvas.height/2 + (Math.random()*400-200);
-                    stickers.push({t:emoji, x, y});
-                    render();
-                },
-                clearStickers: () => { stickers = []; render(); },
-                setText: (txt) => { customText = txt; render(); },
-                print: () => {
-                    const url = canvas.toDataURL('image/jpeg', 0.9);
-                    const finalImg = document.getElementById('final-img');
-                    finalImg.src = url;
-                    
-                    document.getElementById('print-modal').classList.add('active');
-                    // Print Animation
-                    setTimeout(() => {
-                        document.getElementById('paper-slot').classList.add('drop');
-                        Sfx.play('click'); // Simulated print sound trigger
-                    }, 500);
-
-                    // Generate QR
-                    const qrDiv = document.getElementById('qrcode');
-                    qrDiv.innerHTML = '';
-                    new QRCode(qrDiv, { text: url.substring(0,500), width: 128, height: 128 }); // Note: Large base64 urls often fail in free QR libs, usually upload first in backend
-                    
-                    setTimeout(() => document.getElementById('qr-container').classList.add('show'), 2000);
+            // --- STEP 5: PROCESS & EDIT MODE ---
+            function prepareEditMode() {
+                // Generate base strip
+                generateStripCanvas(); 
+                
+                // Show Edit Screen
+                const baseData = D.canvas.toDataURL();
+                const tempImg = new Image();
+                tempImg.src = baseData;
+                
+                D.editContainer.innerHTML = ""; // Clear old
+                D.editContainer.appendChild(tempImg);
+                
+                // Setup Drawing Canvas overlay
+                const drawCvs = document.createElement('canvas');
+                drawCvs.id = "draw-layer";
+                drawCvs.width = D.canvas.width;
+                drawCvs.height = D.canvas.height;
+                drawCvs.style.position = "absolute";
+                drawCvs.style.left = "0"; drawCvs.style.top = "0";
+                drawCvs.style.width = "100%"; drawCvs.style.height = "100%";
+                drawCvs.style.cursor = "crosshair";
+                drawCvs.style.touchAction = "none";
+                D.editContainer.appendChild(drawCvs);
+                
+                // Scale container to fit screen height
+                const h = window.innerHeight - 150; // toolbar space
+                const aspect = D.canvas.width / D.canvas.height;
+                D.editContainer.style.height = h + "px";
+                D.editContainer.style.width = (h * aspect) + "px";
+                
+                setupDrawingEvents(drawCvs);
+                s.stickers = []; // Reset stickers
+                
+                switchScreen('edit');
+            }
+            
+            // --- EDITING TOOLS ---
+            let drawCtx = null;
+            function setupDrawingEvents(canvas) {
+                drawCtx = canvas.getContext('2d');
+                drawCtx.lineJoin = 'round'; drawCtx.lineCap = 'round'; drawCtx.lineWidth = 5; drawCtx.strokeStyle = '#ff0055';
+                
+                let painting = false;
+                
+                function getPos(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
                 }
+                
+                function startDraw(e) {
+                    if(!s.penEnabled) return;
+                    painting = true; const p = getPos(e);
+                    drawCtx.beginPath(); drawCtx.moveTo(p.x, p.y);
+                }
+                function moveDraw(e) {
+                    if(!painting || !s.penEnabled) return;
+                    e.preventDefault(); const p = getPos(e);
+                    drawCtx.lineTo(p.x, p.y); drawCtx.stroke();
+                }
+                function endDraw() { painting = false; }
+                
+                canvas.addEventListener('mousedown', startDraw);
+                canvas.addEventListener('mousemove', moveDraw);
+                canvas.addEventListener('mouseup', endDraw);
+                canvas.addEventListener('touchstart', startDraw);
+                canvas.addEventListener('touchmove', moveDraw);
+                canvas.addEventListener('touchend', endDraw);
+            }
+
+            function togglePen() {
+                s.penEnabled = !s.penEnabled;
+                D.btnPen.classList.toggle('active', s.penEnabled);
+            }
+            function clearDraw() {
+                if(drawCtx) drawCtx.clearRect(0,0,drawCtx.canvas.width, drawCtx.canvas.height);
+                // Remove sticker elements
+                document.querySelectorAll('.placed-sticker').forEach(e => e.remove());
+                s.stickers = [];
+            }
+            function toggleStickerDrawer() {
+                D.stickerDrawer.classList.toggle('open');
+            }
+            function addSticker(char) {
+                // Add DOM element for manipulation
+                const el = document.createElement('div');
+                el.className = 'placed-sticker';
+                el.innerText = char;
+                el.style.left = "50%"; el.style.top = "50%";
+                D.editContainer.appendChild(el);
+                
+                // Simple Drag logic
+                let isDragging = false;
+                
+                const onMove = (e) => {
+                    if(!isDragging) return;
+                    e.preventDefault();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    const rect = D.editContainer.getBoundingClientRect();
+                    el.style.left = (clientX - rect.left) + "px";
+                    el.style.top = (clientY - rect.top) + "px";
+                };
+                
+                el.addEventListener('mousedown', () => isDragging = true);
+                el.addEventListener('touchstart', () => isDragging = true);
+                window.addEventListener('mouseup', () => isDragging = false);
+                window.addEventListener('touchend', () => isDragging = false);
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('touchmove', onMove);
+            }
+
+            function retake() {
+                if(confirm("Retake photos?")) {
+                    switchScreen('cam');
+                }
+            }
+
+            // --- FINAL RENDER ---
+            async function finishEdit() {
+                // 1. Draw base strip
+                const ctx = D.canvas.getContext('2d');
+                
+                // 2. Draw Drawings
+                const drawCanvas = document.getElementById('draw-layer');
+                if(drawCanvas) ctx.drawImage(drawCanvas, 0, 0);
+                
+                // 3. Draw Stickers (Convert DOM pos to Canvas pos)
+                const stickers = document.querySelectorAll('.placed-sticker');
+                const containerRect = D.editContainer.getBoundingClientRect();
+                const scaleX = D.canvas.width / containerRect.width;
+                const scaleY = D.canvas.height / containerRect.height;
+                
+                ctx.font = "100px sans-serif";
+                ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                
+                stickers.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    // relative to container
+                    const relX = (rect.left - containerRect.left) + (rect.width/2);
+                    const relY = (rect.top - containerRect.top) + (rect.height/2);
+                    
+                    const cvsX = relX * scaleX;
+                    const cvsY = relY * scaleY;
+                    ctx.fillText(el.innerText, cvsX, cvsY);
+                });
+
+                // Display Final
+                const finalDataUrl = D.canvas.toDataURL('image/jpeg', 0.95);
+                D.final.src = finalDataUrl;
+                switchScreen('res');
+                
+                // Effects
+                D.final.classList.add('printing-active');
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                
+                // Upload
+                setTimeout(() => { 
+                    document.getElementById('res-sidebar').classList.add('show'); 
+                    handleUpload(finalDataUrl); 
+                }, 3500);
+            }
+
+            // --- STRIP GENERATION LOGIC (Existing + Refined) ---
+            function generateStripCanvas() {
+                const f = s.frame;
+                let stripW = C.stripW; 
+                let photoW = 540, photoH = (photoW*3)/4;
+                let gap = 25, head = 150, foot = 100;
+                let H = head + (photoH*C.shots) + (gap*(C.shots-1)) + foot;
+
+                D.canvas.width = stripW; D.canvas.height = H;
+                const ctx = D.canvas.getContext('2d');
+
+                // BG
+                if(f === 'disco') {
+                    ctx.fillStyle = '#111'; ctx.fillRect(0,0,stripW,H);
+                    // Simple dots
+                    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                    for(let i=0; i<100; i++) ctx.fillRect(Math.random()*stripW, Math.random()*H, 4, 4);
+                } else if(f === 'black') { ctx.fillStyle = '#111'; ctx.fillRect(0,0,stripW,H); }
+                else if(f === 'system') { ctx.fillStyle = '#000'; ctx.fillRect(0,0,stripW,H); }
+                else { ctx.fillStyle = '#f8f8f8'; ctx.fillRect(0,0,stripW,H); }
+
+                // HEADER
+                ctx.textAlign = 'center';
+                if(f === 'love') {
+                    ctx.fillStyle = '#000'; ctx.font = 'bold 60px "DM Sans"'; ctx.fillText('I', stripW/2 - 130, 100);
+                    ctx.fillStyle = '#FF0000'; ctx.font = '70px "DM Sans"'; ctx.fillText('♥', stripW/2 - 50, 100);
+                    ctx.fillStyle = '#000'; ctx.font = 'bold 60px "DM Sans"'; ctx.fillText('SENA', stripW/2 + 100, 100);
+                } else if(f === 'system') {
+                    ctx.fillStyle = '#0f0'; ctx.font = '40px "VT323"'; ctx.fillText('SYS.LOG: CAPTURED', stripW/2, 80);
+                    ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2; ctx.strokeRect(10,10,stripW-20,H-20);
+                } else {
+                    ctx.fillStyle = (f==='black'||f==='disco') ? '#fff' : '#000';
+                    ctx.font = 'bold 40px "DM Sans"'; ctx.fillText('SENA', stripW/2, 80);
+                    ctx.font = '700 24px "DM Sans"'; ctx.fillText('PHOTOBOOTH', stripW/2, 120);
+                }
+
+                // PHOTOS
+                let y = head;
+                s.photos.forEach(p => {
+                    const sR = p.width/p.height; const dR=4/3;
+                    let sx, sy, sw, sh;
+                    if(sR > dR) { sh=p.height; sw=sh*dR; sx=(p.width-sw)/2; sy=0; }
+                    else { sw=p.width; sh=sw/dR; sx=0; sy=(p.height-sh)/2; }
+                    
+                    if(f === 'system') { ctx.strokeStyle = '#0f0'; ctx.lineWidth=2; ctx.strokeRect((stripW-photoW)/2 - 5, y - 5, photoW + 10, photoH + 10); }
+                    else if(f === 'love') { ctx.strokeStyle = '#FF0000'; ctx.lineWidth=4; ctx.strokeRect((stripW-photoW)/2, y, photoW, photoH); }
+
+                    ctx.drawImage(p, sx, sy, sw, sh, (stripW-photoW)/2, y, photoW, photoH);
+                    y += photoH + gap;
+                });
+
+                // FOOTER
+                const quote = C.quotes[Math.floor(Math.random()*C.quotes.length)];
+                ctx.font = '20px "VT323"'; ctx.textAlign = 'center'; 
+                ctx.fillStyle = (f==='system') ? '#0f0' : (f==='black'||f==='disco') ? '#888' : '#666';
+                
+                const date = new Date().toLocaleDateString('en-GB');
+                let footerText = date + "  •  " + quote;
+                if(f === 'system') footerText = `> ${date} // END_PROCESS`;
+                ctx.fillText(footerText, stripW/2, H - 40);
+            }
+
+            function setupDrawing() { /* Init Place holder */ }
+
+            // --- SERVER & UTILS ---
+            async function handleUpload(base64) {
+                // Mock or Real Upload
+                const log = document.getElementById('log-text');
+                const fill = document.getElementById('load-fill');
+                
+                // Simulating upload progress
+                let p = 0;
+                const int = setInterval(() => { p+=5; if(p<=90) fill.style.width=p+"%"; }, 100);
+
+                // Fallback / Demo Mode
+                setTimeout(() => {
+                    clearInterval(int);
+                    fill.style.width="100%";
+                    log.innerText = "> READY FOR DOWNLOAD";
+                    
+                    // Generate QR (Current URL for demo)
+                    document.getElementById('qrcode').innerHTML = "";
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: window.location.href, width: 120, height: 120
+                    });
+                    document.getElementById('qr-box').classList.add('show');
+                }, 2000);
+            }
+
+            function adjCopies(n) {
+                s.copies = Math.max(1, s.copies + n);
+                document.getElementById('copy-count').innerText = s.copies;
+            }
+
+            function download() {
+                const a = document.createElement('a');
+                a.download = `SENA_${Date.now()}.jpg`;
+                a.href = D.final.src;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            }
+
+            function restart() {
+                location.reload();
+            }
+
+            return { 
+                start, selectFrame, toggleCamFlip, toggleTimer, toggleFlash, toggleMirror, toggleGrid, 
+                filter, snap, finishEdit, toggleStickerDrawer, addSticker, togglePen, clearDraw, retake,
+                adjCopies, download, restart 
             };
         })();
-
-        // --- 5. VIRTUAL KEYBOARD ---
-        const VirtKB = (function() {
-            const el = document.getElementById('vkb-container');
-            const disp = document.getElementById('vkb-input');
-            let buffer = "";
-
-            return {
-                open: () => { buffer=""; disp.innerText="_"; el.classList.add('show'); },
-                close: () => { el.classList.remove('show'); },
-                type: (char) => {
-                    Sfx.play('click');
-                    buffer += char;
-                    disp.innerText = buffer + "_";
-                },
-                confirm: () => {
-                    Sfx.play('click');
-                    Editor.setText(buffer);
-                    el.classList.remove('show');
-                }
-            };
-        })();
-
-        // START
-        window.onload = Sys.boot;
-
     </script>
 </body>
 </html>
