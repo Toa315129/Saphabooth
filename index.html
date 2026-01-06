@@ -318,17 +318,17 @@
             
             <div class="frame-list">
                 <div class="mini-strip thai-chic" onclick="OS.selectFrame('thai-chic')">
-                    <div class="strip-header" style="font-family:var(--font-thai); font-weight:600;">เสนา<br>Photo Booth</div>
+                    <div class="strip-header" style="font-family:var(--font-thai); font-weight:600;">เสนา<br>โฟโต้บูธ</div>
                     <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
                     <div class="strip-footer" style="font-family:var(--font-thai);">บันทึกความทรงจำ</div>
                 </div>
                 <div class="mini-strip thai-red" onclick="OS.selectFrame('thai-red')">
-                    <div class="strip-header" style="font-family:var(--font-thai); font-weight:800; letter-spacing:1px;">ฟิล์มแดง<br>๒๕๖๗</div>
+                    <div class="strip-header" style="font-family:var(--font-thai); font-weight:800; letter-spacing:1px;">เสนา<br>๒๕๖๗</div>
                     <div class="strip-photos"><div class="photo-slot" style="border-color:#ff5555; background:#330000;"></div><div class="photo-slot" style="border-color:#ff5555; background:#330000;"></div><div class="photo-slot" style="border-color:#ff5555; background:#330000;"></div></div>
                     <div class="strip-footer" style="font-family:var(--font-thai);">เท่แบบไทย</div>
                 </div>
                 <div class="mini-strip neon" onclick="OS.selectFrame('neon')">
-                    <div class="strip-header" style="color:#00f3ff; text-shadow:0 0 5px #00f3ff;">NEON<br>TOKYO</div>
+                    <div class="strip-header" style="color:#00f3ff; text-shadow:0 0 5px #00f3ff;">SENA<br>MARKET</div>
                     <div class="strip-photos"><div class="photo-slot" style="border-color:#ff00ff;"></div><div class="photo-slot" style="border-color:#00f3ff;"></div><div class="photo-slot" style="border-color:#ff00ff;"></div></div>
                     <div class="strip-footer" style="color:#00f3ff;">CYBER NIGHT</div>
                 </div>
@@ -744,14 +744,14 @@
                     ctx.fillStyle = '#FF0000'; ctx.font = '70px "DM Sans"'; ctx.fillText('♥', stripW/2 - 50, 100);
                     ctx.fillStyle = '#000'; ctx.font = 'bold 60px "DM Sans"'; ctx.fillText('SENA', stripW/2 + 100, 100);
                 } else if(f === 'system') {
-                    ctx.fillStyle = '#0f0'; ctx.font = '40px "VT323"'; ctx.fillText('SYS.LOG: CAPTURED', stripW/2, 80);
+                    ctx.fillStyle = '#0f0'; ctx.font = '40px "VT323"'; ctx.fillText('SENA PHOTO', stripW/2, 80);
                     ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2; ctx.strokeRect(10,10,stripW-20,H-20);
                 } else if(f === 'thai-chic') {
-                    ctx.fillStyle = '#4a3b3b'; ctx.font = '600 50px "Prompt"'; ctx.fillText('เสนา Photo Booth', stripW/2, 100);
+                    ctx.fillStyle = '#4a3b3b'; ctx.font = '600 50px "js chanok"'; ctx.fillText('เสนาโฟโต้บูธ', stripW/2, 100);
                 } else if(f === 'thai-red') {
-                    ctx.fillStyle = '#ffcccc'; ctx.shadowColor='#ff0000'; ctx.shadowBlur=10; ctx.font = '800 60px "Prompt"'; ctx.fillText('ฟิล์มแดง ๒๕๖๗', stripW/2, 100); ctx.shadowBlur=0;
+                    ctx.fillStyle = '#ffcccc'; ctx.shadowColor='#ff0000'; ctx.shadowBlur=10; ctx.font = '800 60px "js chanok"'; ctx.fillText('เสนา ๒๕๖๙', stripW/2, 100); ctx.shadowBlur=0;
                 } else if(f === 'neon') {
-                    ctx.fillStyle = '#00f3ff'; ctx.shadowColor='#00f3ff'; ctx.shadowBlur=15; ctx.font = '800 50px "DM Sans"'; ctx.fillText('NEON TOKYO', stripW/2, 100); ctx.shadowBlur=0;
+                    ctx.fillStyle = '#00f3ff'; ctx.shadowColor='#00f3ff'; ctx.shadowBlur=15; ctx.font = '800 50px "DM Sans"'; ctx.fillText('SENA MARKET', stripW/2, 100); ctx.shadowBlur=0;
                 } else if(f === 'mono') {
                      ctx.fillStyle = '#000'; ctx.font = '800 50px "DM Sans"'; ctx.fillText('MONO GRID', stripW/2, 100);
                 } else {
