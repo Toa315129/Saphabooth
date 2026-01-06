@@ -3,544 +3,635 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SENA SYSTEM | OS 3.0 ULTIMATE</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>SENA PHOTOBOOTH | OS 4.0 ULTIMATE</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;800&family=VT323&family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- 1. CORE SYSTEM STYLES --- */
+        /* =========================================
+           1. CORE SYSTEM & ANIMATIONS
+           ========================================= */
         :root {
-            --bg: #050505;
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.2);
-            --primary: #FFFFFF;
-            --accent: #00FF94; /* Cyber Green */
-            --alert: #FF2A6D;
-            --font-main: 'Space Grotesk', sans-serif;
-            --font-code: 'JetBrains Mono', monospace;
+            --bg-color: #050505;
+            --primary: #4169E1;
+            --alert: #FF3333; 
+            --fuji-green: #004d40;
+            --font-ui: 'DM Sans', sans-serif;
+            --font-code: 'VT323', monospace;
+            --font-fun: 'Fredoka', sans-serif;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        
+
         body {
             margin: 0; padding: 0;
-            background: var(--bg);
-            color: var(--primary);
-            font-family: var(--font-main);
-            height: 100vh; overflow: hidden;
+            background: var(--bg-color);
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            color: #fff;
+            font-family: var(--font-ui);
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* --- 2. CRT & OVERLAYS --- */
+        /* Confetti Effect */
+        .confetti {
+            position: fixed; width: 10px; height: 10px; background-color: #f00;
+            animation: confetti-fall 3s linear forwards; z-index: 9999; pointer-events: none;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Scanlines & CRT */
         .scanlines {
-            position: fixed; inset: 0; pointer-events: none; z-index: 900;
+            position: absolute; inset: 0; pointer-events: none; z-index: 900;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
             background-size: 100% 4px;
         }
-        .vignette {
-            position: fixed; inset: 0; pointer-events: none; z-index: 901;
-            background: radial-gradient(circle, rgba(0,0,0,0) 50%, rgba(0,0,0,0.8) 100%);
-        }
-        .noise {
-            position: fixed; inset: 0; pointer-events: none; z-index: 899; opacity: 0.03;
+        .grain {
+            position: absolute; inset: 0; pointer-events: none; z-index: 899; opacity: 0.05;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
-        /* --- 3. UI LAYOUT --- */
+        /* SCREENS TRANSITION */
         .screen {
             position: absolute; inset: 0;
             display: flex; flex-direction: column;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 10; padding: 20px;
+            opacity: 0; pointer-events: none; transform: scale(0.95);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
         }
-        .screen.active { opacity: 1; pointer-events: auto; z-index: 100; }
+        .screen.active { opacity: 1; pointer-events: auto; transform: scale(1); }
 
-        /* --- SCREEN: STANDBY --- */
-        #s-standby { justify-content: center; align-items: center; text-align: center; }
-        .logo-box {
-            border: 1px solid var(--primary); padding: 40px;
-            position: relative; margin-bottom: 40px;
+        /* =========================================
+           2. HOME & UI
+           ========================================= */
+        #screen-home {
+            justify-content: center; align-items: center; text-align: center;
+            background: radial-gradient(circle at center, #222 0%, #000 100%);
         }
-        .logo-box::before { content:''; position:absolute; top:-5px; left:-5px; width:10px; height:10px; background:var(--primary); }
-        .logo-box::after { content:''; position:absolute; bottom:-5px; right:-5px; width:10px; height:10px; background:var(--primary); }
-        
-        h1 { font-family: var(--font-code); font-size: 4rem; margin: 0; letter-spacing: -2px; line-height: 0.9; }
-        h2 { font-family: var(--font-code); font-size: 1rem; letter-spacing: 5px; color: var(--accent); margin-top: 10px; }
+        .title-group { animation: float 6s ease-in-out infinite; }
+        .main-title {
+            font-size: 4.5rem; font-weight: 800; color: #fff;
+            line-height: 0.9; letter-spacing: -2px; margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(65, 105, 225, 0.6);
+        }
+        .sub-title { font-family: var(--font-code); color: #888; letter-spacing: 4px; font-size: 1.2rem; }
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
         
         .btn-start {
-            background: var(--primary); color: #000;
-            border: none; padding: 20px 60px;
-            font-family: var(--font-code); font-weight: 800; font-size: 1.5rem;
-            cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-            transition: 0.2s;
+            margin-top: 50px; background: transparent; border: 2px solid #fff;
+            padding: 20px 60px; color: #fff; font-family: var(--font-code); font-size: 2rem;
+            cursor: pointer; position: relative; overflow: hidden; transition: 0.3s;
         }
-        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 0 20px var(--accent); }
+        .btn-start:hover { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
         .btn-start:active { transform: scale(0.95); }
 
-        /* --- SCREEN: CAMERA & UI --- */
-        #s-capture { padding: 0; background: #000; }
-        .cam-header {
-            height: 60px; background: #000; border-bottom: 1px solid #333;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; font-family: var(--font-code); color: var(--accent);
+        /* =========================================
+           3. FRAMES SELECTION
+           ========================================= */
+        #screen-frames { background: #111; padding: 20px; justify-content: center; }
+        .frame-scroller {
+            display: flex; gap: 30px; overflow-x: auto; padding: 40px 20px; width: 100%;
+            justify-content: flex-start; align-items: center; scrollbar-width: none;
         }
-        .cam-view {
-            flex: 1; position: relative; overflow: hidden;
-            display: flex; justify-content: center; background: #111;
-        }
-        video { height: 100%; width: auto; min-width: 100%; object-fit: cover; transform: scaleX(-1); }
-        
-        .grid-overlay {
-            position: absolute; inset: 0; pointer-events: none;
-            background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 33.33% 33.33%;
-        }
+        .frame-scroller::-webkit-scrollbar { display: none; }
 
+        .mini-strip {
+            width: 140px; height: 380px; flex-shrink: 0;
+            display: flex; flex-direction: column; padding: 10px;
+            cursor: pointer; transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); border-radius: 4px; position: relative;
+        }
+        .mini-strip:hover { transform: translateY(-20px) scale(1.05); z-index: 100; box-shadow: 0 30px 50px rgba(0,0,0,0.8); }
+        .mini-strip.selected { border: 4px solid var(--primary); transform: scale(1.05); }
+
+        /* Frame Styles */
+        .mini-strip.emoji { background: #E6E6FA; color: #555; background-image: radial-gradient(#B0E0E6 20%, transparent 20%), radial-gradient(#FFC0CB 20%, transparent 20%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+        .mini-strip.polaroid { background: #fff; color: #000; border: 1px solid #ccc; }
+        .mini-strip.disco { background: #111; color: #fff; border: 1px solid #444; background-image: radial-gradient(white 1px, transparent 1px); background-size: 15px 15px; }
+        .mini-strip.fuji { background: #004d40; color: #e0f2f1; border: 1px solid #00695c; }
+        
+        .strip-header { text-align: center; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px; }
+        .photo-slot { flex: 1; background: rgba(0,0,0,0.1); margin-bottom: 5px; border: 1px dashed rgba(0,0,0,0.2); }
+        .strip-footer { text-align: center; font-size: 0.6rem; margin-top: 5px; font-family: var(--font-code); }
+
+        /* =========================================
+           4. CAMERA & RING LIGHT
+           ========================================= */
+        #screen-cam { background: #000; justify-content: space-between; position: relative; }
+        
+        /* Ring Light Effect */
+        .ring-light {
+            position: absolute; inset: 0; border: 0px solid rgba(255,255,255,0.8);
+            pointer-events: none; z-index: 50; transition: border-width 0.3s;
+            box-shadow: inset 0 0 50px rgba(255,255,255,0);
+        }
+        .ring-light.on { border-width: 15px; box-shadow: inset 0 0 50px rgba(255,255,255,0.5); }
+
+        .ui-top { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 60; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        .clock { font-family: var(--font-code); font-size: 1.2rem; }
+        
+        .viewport { flex: 1; position: relative; overflow: hidden; background: #111; display: flex; justify-content: center; align-items: center; }
+        video#video-feed { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: filter 0.3s; }
+        video#video-feed.no-mirror { transform: scaleX(1); }
+
+        /* NEW FILTERS CSS */
+        .f-fuji { filter: contrast(1.1) brightness(1.1) saturate(0.9) hue-rotate(-5deg) !important; }
+        .f-1998 { filter: sepia(0.2) saturate(1.4) contrast(1.1) hue-rotate(-10deg) !important; }
+        .f-cctv { filter: grayscale(1) sepia(1) hue-rotate(50deg) saturate(3) contrast(1.5) !important; }
+        .f-bw { filter: grayscale(1) contrast(1.2) !important; }
+        
         #countdown {
-            position: absolute; top:50%; left:50%; transform: translate(-50%,-50%);
-            font-size: 10rem; font-weight: 800; color: #fff;
-            text-shadow: 0 0 30px var(--alert); display: none;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            font-size: 15rem; font-weight: 800; color: #fff; display: none;
+            text-shadow: 4px 4px 0 #000; z-index: 100; font-variant-numeric: tabular-nums;
         }
 
         .cam-controls {
-            height: 140px; background: #000; border-top: 1px solid #333;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 15px; padding-bottom: 20px;
+            height: 140px; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 60; padding-bottom: 20px;
         }
+        .filter-scroll {
+            display: flex; gap: 10px; overflow-x: auto; width: 100%; padding: 10px 20px; margin-bottom: 10px;
+            justify-content: center; scrollbar-width: none;
+        }
+        .btn-filter {
+            background: #222; border: 1px solid #444; color: #888; padding: 5px 15px; border-radius: 20px;
+            font-size: 0.8rem; cursor: pointer; white-space: nowrap; font-family: var(--font-code); transition: 0.2s;
+        }
+        .btn-filter.active { background: #fff; color: #000; font-weight: bold; transform: scale(1.1); }
+        .btn-filter.fuji-mode { color: #00d2ff; border-color: #00d2ff; }
+
+        .shutter-row { display: flex; align-items: center; gap: 30px; width: 100%; justify-content: center; }
+        .btn-icon { background: none; border: none; font-size: 1.5rem; cursor: pointer; opacity: 0.7; transition: 0.2s; color: #fff; }
+        .btn-icon:hover { opacity: 1; transform: scale(1.1); }
+        .btn-icon.active { color: #ffd700; opacity: 1; text-shadow: 0 0 10px #ffd700; }
+
+        .btn-shutter {
+            width: 80px; height: 80px; border: 4px solid #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
+        }
+        .shutter-inner { width: 66px; height: 66px; background: #fff; border-radius: 50%; transition: 0.1s; }
+        .btn-shutter:active .shutter-inner { transform: scale(0.85); background: #ddd; }
+
+        /* =========================================
+           5. RESULT & PRINT
+           ========================================= */
+        #screen-result { background: #111; flex-direction: row; gap: 40px; padding: 40px; justify-content: center; align-items: flex-start; overflow-y: auto;}
         
-        /* Filter Selector */
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 5px; }
-        .f-btn {
-            background: #222; border: 1px solid #444; color: #888;
-            padding: 5px 15px; font-family: var(--font-code); font-size: 0.8rem;
-            cursor: pointer; border-radius: 20px; transition: 0.2s;
+        .printer-slot {
+            width: 320px; height: auto; min-height: 500px;
+            background: #000; border: 10px solid #222; border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8); overflow: hidden; position: relative;
         }
-        .f-btn.active { background: var(--primary); color: #000; border-color: #fff; }
+        .final-print { width: 100%; display: block; animation: slideUp 1s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        /* Shutter */
-        .shutter {
-            width: 70px; height: 70px; border-radius: 50%;
-            border: 3px solid #fff; position: relative; cursor: pointer;
-        }
-        .shutter::after {
-            content:''; position: absolute; top:50%; left:50%; transform: translate(-50%,-50%);
-            width: 60px; height: 60px; background: #fff; border-radius: 50%; transition: 0.1s;
-        }
-        .shutter:active::after { width: 50px; height: 50px; background: var(--alert); }
+        .result-ui { width: 300px; display: flex; flex-direction: column; gap: 15px; opacity: 0; animation: fadeIn 1s ease 1s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
 
-        /* --- SCREEN: PROCESSING & RESULT --- */
-        #s-result { background: #080808; align-items: center; justify-content: center; }
-        
-        .printer-machine {
-            position: relative; width: 320px; height: 60vh;
-            background: #111; border: 1px solid #333;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border-radius: 5px; overflow: hidden; /* Mask */
-            margin-bottom: 20px;
+        .btn-action {
+            width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            font-family: var(--font-ui); font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
         }
-        .paper-slot {
-            position: absolute; bottom: 0; left: 10px; right: 10px; height: 5px;
-            background: #000; box-shadow: inset 0 2px 5px rgba(0,0,0,1); z-index: 20;
-        }
-        .photo-strip {
-            width: 100%; display: block;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            transform: translateY(-105%); /* Hidden inside/above */
-            transition: transform 3.5s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        .photo-strip.printed { transform: translateY(0); }
+        .btn-pri { background: var(--primary); color: #fff; }
+        .btn-sec { background: transparent; border: 1px solid #555; color: #ccc; }
+        .btn-pri:hover { background: #3558c4; box-shadow: 0 5px 15px rgba(65, 105, 225, 0.4); }
 
-        .loading-ui {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 50; transition: opacity 0.5s;
-        }
-        .bar { width: 200px; height: 2px; background: #333; margin-top: 20px; position: relative; overflow: hidden; }
-        .bar-fill { position: absolute; top:0; left:0; height:100%; width: 0%; background: var(--accent); transition: width 0.3s; }
-        .status-txt { font-family: var(--font-code); color: var(--accent); font-size: 0.9rem; margin-top: 10px; }
+        /* FLASH */
+        #flash { position: fixed; inset: 0; background: #fff; z-index: 999; opacity: 0; pointer-events: none; }
+        .do-flash { animation: flashAnim 0.3s ease-out; }
+        @keyframes flashAnim { 0% { opacity: 1; background: #e0f7fa; } 100% { opacity: 0; } }
 
-        .result-actions {
-            width: 100%; max-width: 400px;
-            display: flex; flex-direction: column; align-items: center; gap: 15px;
-            opacity: 0; transition: 1s; transform: translateY(20px);
+        /* PRINT MEDIA QUERY */
+        @media print {
+            body * { visibility: hidden; }
+            #screen-result, #screen-result * { visibility: visible; }
+            #screen-result { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #fff; display: block; padding: 0; margin: 0; }
+            .printer-slot { border: none; box-shadow: none; width: 100%; max-width: 600px; margin: 0 auto; }
+            .result-ui { display: none; }
+            .scanlines, .grain { display: none; }
         }
-        .result-actions.show { opacity: 1; transform: translateY(0); }
 
-        .qr-box {
-            background: #fff; padding: 10px; border-radius: 4px;
-            display: flex; gap: 15px; align-items: center; width: 100%;
-        }
-        #qrcode { width: 80px; height: 80px; flex-shrink: 0; }
-        .qr-info h3 { color: #000; margin: 0; font-size: 1rem; font-weight: 800; }
-        .qr-info p { color: #555; margin: 5px 0 0; font-size: 0.75rem; font-family: var(--font-code); }
-
-        .btn-restart {
-            background: transparent; color: #666; border: 1px solid #333;
-            padding: 10px 30px; font-family: var(--font-code); cursor: pointer;
-            width: 100%; transition: 0.2s;
-        }
-        .btn-restart:hover { color: #fff; border-color: #fff; }
-
-        /* Flash */
-        .flash-overlay {
-            position: fixed; inset: 0; background: #fff; z-index: 999;
-            opacity: 0; pointer-events: none; transition: opacity 0.1s;
+        @media (max-width: 800px) {
+            #screen-result { flex-direction: column; align-items: center; padding-top: 80px; }
+            .frame-scroller { justify-content: flex-start; padding-left: 20px; }
+            .btn-start { padding: 15px 40px; font-size: 1.5rem; }
+            .main-title { font-size: 3rem; }
+            .mini-strip { width: 110px; height: 300px; }
         }
     </style>
 </head>
 <body>
 
     <div class="scanlines"></div>
-    <div class="vignette"></div>
-    <div class="noise"></div>
-    <div class="flash-overlay" id="flash"></div>
+    <div class="grain"></div>
 
-    <div id="s-standby" class="screen active">
-        <div class="logo-box">
-            <h1>SENA<br>PHOTO</h1>
-            <h2>SYSTEM OS 3.0</h2>
+    <div id="screen-home" class="screen active">
+        <div class="title-group">
+            <div class="main-title">SENA<br>OS 4.0</div>
+            <div class="sub-title">ULTIMATE PHOTOBOOTH</div>
         </div>
-        <button class="btn-start" onclick="App.init()">TOUCH TO START</button>
-        <div style="margin-top:20px; font-family:var(--font-code); font-size:0.7rem; color:#444;">
-            SECURE CONNECTION :: READY
+        <button class="btn-start" onclick="OS.start()">START</button>
+        <p style="margin-top:20px; opacity:0.5; font-size:0.8rem;">PRESS SPACEBAR TO START</p>
+    </div>
+
+    <div id="screen-frames" class="screen">
+        <h2 style="text-align:center; font-family:var(--font-code);">SELECT YOUR VIBE</h2>
+        <div class="frame-scroller">
+            
+            <div class="mini-strip fuji" onclick="OS.selectFrame('fuji')">
+                <div class="strip-header">FUJI FILM</div>
+                <div class="photo-slot" style="background:#00332a"></div>
+                <div class="photo-slot" style="background:#00332a"></div>
+                <div class="photo-slot" style="background:#00332a"></div>
+                <div class="strip-footer">PRO NEG. STD</div>
+            </div>
+
+             <div class="mini-strip emoji" onclick="OS.selectFrame('emoji')">
+                <div class="strip-header" style="color:#4169E1">Y2K VIBES</div>
+                <div class="photo-slot" style="background:#fff"></div>
+                <div class="photo-slot" style="background:#fff"></div>
+                <div class="photo-slot" style="background:#fff"></div>
+                <div class="strip-footer">👀🛝🥽🫧🍥</div>
+            </div>
+
+            <div class="mini-strip polaroid" onclick="OS.selectFrame('polaroid')">
+                <div class="strip-header">CLASSIC</div>
+                <div class="photo-slot" style="background:#eee"></div>
+                <div class="photo-slot" style="background:#eee"></div>
+                <div class="photo-slot" style="background:#eee"></div>
+                <div class="strip-footer">SIMPLE IS BEST</div>
+            </div>
+
+            <div class="mini-strip disco" onclick="OS.selectFrame('disco')">
+                <div class="strip-header">DISCO</div>
+                <div class="photo-slot" style="background:#333"></div>
+                <div class="photo-slot" style="background:#333"></div>
+                <div class="photo-slot" style="background:#333"></div>
+                <div class="strip-footer">PARTY MODE</div>
+            </div>
         </div>
     </div>
 
-    <div id="s-capture" class="screen">
-        <div class="cam-header">
-            <span>REC :: <span id="frame-count">0</span>/3</span>
-            <span style="color:var(--alert)">LIVE</span>
+    <div id="screen-cam" class="screen">
+        <div class="ring-light" id="ring-light"></div>
+        
+        <div class="ui-top">
+            <div style="color:var(--alert); font-weight:bold;">● REC</div>
+            <div class="clock" id="clock">00:00</div>
         </div>
-        <div class="cam-view">
-            <video id="video" autoplay playsinline muted></video>
-            <div class="grid-overlay"></div>
+        
+        <div class="viewport">
+            <video id="video-feed" autoplay playsinline muted></video>
             <div id="countdown">3</div>
         </div>
+
         <div class="cam-controls">
-            <div class="filter-bar">
-                <div class="f-btn active" onclick="App.setFilter('normal', this)">NORM</div>
-                <div class="f-btn" onclick="App.setFilter('bw', this)">B/W</div>
-                <div class="f-btn" onclick="App.setFilter('1990', this)">1990</div>
-                <div class="f-btn" onclick="App.setFilter('cyber', this)">CYBER</div>
+            <div class="filter-scroll">
+                <button class="btn-filter active" onclick="OS.setFilter('normal', this)">NORMAL</button>
+                <button class="btn-filter fuji-mode" onclick="OS.setFilter('fuji', this)">🗻 FUJI PRO</button>
+                <button class="btn-filter" onclick="OS.setFilter('1998', this)">🌇 1998</button>
+                <button class="btn-filter" onclick="OS.setFilter('cctv', this)">👽 CCTV</button>
+                <button class="btn-filter" onclick="OS.setFilter('bw', this)">B/W</button>
             </div>
-            <div class="shutter" onclick="App.snapSequence()"></div>
-        </div>
-    </div>
 
-    <div id="s-result" class="screen">
-        <div class="printer-machine">
-            <img id="final-strip" class="photo-strip" alt="Printing...">
-            <div class="paper-slot"></div>
-            
-            <div class="loading-ui" id="loader">
-                <div style="font-family: var(--font-code); letter-spacing: 2px;">PROCESSING</div>
-                <div class="bar"><div class="bar-fill" id="progress"></div></div>
-                <div class="status-txt" id="status-msg">INITIALIZING...</div>
-            </div>
-        </div>
-
-        <div class="result-actions" id="res-actions">
-            <div class="qr-box">
-                <div id="qrcode"></div>
-                <div class="qr-info">
-                    <h3>SCAN ME</h3>
-                    <p>Download your high-res photo strip.</p>
+            <div class="shutter-row">
+                <button class="btn-icon" id="btn-light" onclick="OS.toggleLight()">💡</button>
+                
+                <div class="btn-shutter" onclick="OS.snap()">
+                    <div class="shutter-inner"></div>
                 </div>
+
+                <button class="btn-icon" id="btn-date" onclick="OS.toggleDate()">📅</button>
             </div>
-            <button class="btn-restart" onclick="location.reload()">NEW SESSION</button>
+            <div style="font-size:0.7rem; color:#555; margin-top:10px; font-family:var(--font-code);">[SPACE] TO SHOOT</div>
         </div>
     </div>
 
-    <canvas id="c-proc" style="display:none;"></canvas>
+    <div id="screen-result" class="screen">
+        <div class="printer-slot">
+            <img id="final-img" class="final-print" alt="Print">
+        </div>
+        
+        <div class="result-ui">
+            <div style="background:#222; padding:15px; border-radius:8px;">
+                <div style="color:#aaa; font-size:0.8rem; margin-bottom:5px;">STATUS</div>
+                <div style="color:#0f0; font-family:var(--font-code);">PRINT SUCCESSFUL</div>
+            </div>
+
+            <button class="btn-action btn-pri" onclick="window.print()">🖨️ PRINT PHOTO</button>
+            <button class="btn-action btn-sec" onclick="OS.download()">⬇ SAVE IMAGE</button>
+            <button class="btn-action btn-sec" onclick="location.reload()">↻ NEW SHOOT</button>
+            
+            <div id="qrcode" style="margin-top:20px; background:#fff; padding:10px; border-radius:5px; align-self:center;"></div>
+        </div>
+    </div>
+
+    <div id="flash"></div>
+    <canvas id="hidden-canvas" style="display:none"></canvas>
 
     <script>
-        const App = (function() {
-            // Configuration
-            const CFG = {
-                apiKey: 'ffc90ad0bc5c7e0c056b68ef7430304a', // Your Key
-                width: 1280, height: 720, // Camera Res
-                stripW: 800, // High Res Output Width
-                shots: 3
+        const OS = (function() {
+            // CONFIG
+            const C = {
+                w: 1280, h: 720,
+                stripW: 600,
+                shots: 3,
+                emojiList: ["👀", "🛝", "🥽", "🫧", "🍥", "🎀", "👾"]
             };
 
-            const S = {
-                stream: null,
-                photos: [],
-                filter: 'normal',
-                isShooting: false
+            // STATE
+            let s = { 
+                filter: 'normal', 
+                frame: 'polaroid',
+                photos: [], 
+                stream: null, 
+                processing: false,
+                ringLight: false,
+                showDate: true
             };
 
-            const El = {
+            // DOM
+            const D = {
                 screens: {
-                    standby: document.getElementById('s-standby'),
-                    capture: document.getElementById('s-capture'),
-                    result: document.getElementById('s-result')
+                    home: document.getElementById('screen-home'),
+                    frames: document.getElementById('screen-frames'),
+                    cam: document.getElementById('screen-cam'),
+                    res: document.getElementById('screen-result')
                 },
-                video: document.getElementById('video'),
-                flash: document.getElementById('flash'),
+                video: document.getElementById('video-feed'),
+                canvas: document.getElementById('hidden-canvas'),
                 count: document.getElementById('countdown'),
-                canvas: document.getElementById('c-proc'),
-                strip: document.getElementById('final-strip'),
-                loader: document.getElementById('loader'),
-                progress: document.getElementById('progress'),
-                status: document.getElementById('status-msg'),
-                actions: document.getElementById('res-actions'),
-                frameCount: document.getElementById('frame-count')
+                flash: document.getElementById('flash'),
+                final: document.getElementById('final-img'),
+                ring: document.getElementById('ring-light'),
+                clock: document.getElementById('clock'),
+                lightBtn: document.getElementById('btn-light'),
+                dateBtn: document.getElementById('btn-date')
             };
 
-            // --- AUDIO ENGINE (Synthesized) ---
-            const AudioEngine = {
-                ctx: null,
-                init() { if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
-                beep() {
-                    this.init();
-                    const o=this.ctx.createOscillator(); const g=this.ctx.createGain();
+            // --- AUDIO SYSTEM (Dynamic) ---
+            const Aud = {
+                ctx: new (window.AudioContext||window.webkitAudioContext)(),
+                playTone: function(freq, type, dur, vol=0.1) {
+                    if(this.ctx.state === 'suspended') this.ctx.resume();
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = type; o.frequency.value = freq;
                     o.connect(g); g.connect(this.ctx.destination);
-                    o.frequency.value=1000; g.gain.value=0.1;
-                    o.start(); o.stop(this.ctx.currentTime+0.1);
+                    g.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+                    o.start(); o.stop(this.ctx.currentTime + dur);
                 },
-                shutter() {
-                    this.init();
-                    const o=this.ctx.createOscillator(); const g=this.ctx.createGain();
-                    o.type='square'; o.frequency.value=100;
-                    o.connect(g); g.connect(this.ctx.destination);
-                    g.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                    g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime+0.15);
-                    o.start(); o.stop(this.ctx.currentTime+0.15);
+                playCount: function() { this.playTone(800, 'sine', 0.1); },
+                playShutter: function() { 
+                    this.playTone(150, 'sawtooth', 0.1, 0.2); 
+                    setTimeout(()=>this.playTone(100, 'square', 0.2, 0.2), 50);
                 },
-                printNoise() {
-                    this.init();
-                    const o=this.ctx.createOscillator(); const g=this.ctx.createGain();
-                    o.type='sawtooth'; o.frequency.value=50;
-                    o.connect(g); g.connect(this.ctx.destination);
-                    g.gain.value=0.05;
-                    o.start(); o.stop(this.ctx.currentTime+2.5);
+                playSuccess: function() {
+                    this.playTone(600, 'sine', 0.1);
+                    setTimeout(()=>this.playTone(800, 'sine', 0.2), 100);
+                    setTimeout(()=>this.playTone(1200, 'sine', 0.4), 200);
                 }
             };
+
+            // --- KEYBOARD SHORTCUTS ---
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    if (D.screens.home.classList.contains('active')) start();
+                    else if (D.screens.cam.classList.contains('active')) snap();
+                }
+            });
 
             // --- CORE FUNCTIONS ---
-            async function init() {
-                AudioEngine.init();
-                try {
-                    S.stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'user', width: CFG.width, height: CFG.height },
-                        audio: false
-                    });
-                    El.video.srcObject = S.stream;
-                    switchScreen('capture');
-                } catch(e) {
-                    alert('Error: Camera Access Denied or Not Available via HTTP');
-                }
+            function start() {
+                Aud.playSuccess();
+                switchScreen('frames');
             }
 
             function switchScreen(name) {
-                Object.values(El.screens).forEach(s => s.classList.remove('active'));
-                El.screens[name].classList.add('active');
+                Object.values(D.screens).forEach(s => s.classList.remove('active'));
+                D.screens[name].classList.add('active');
             }
 
-            function setFilter(name, btn) {
-                S.filter = name;
-                document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+            async function selectFrame(type) {
+                s.frame = type;
+                Aud.playTone(1000, 'sine', 0.1);
+                try {
+                    s.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: C.w, height: C.h } });
+                    D.video.srcObject = s.stream;
+                    switchScreen('cam');
+                } catch(e) { alert("Camera access denied"); }
+            }
+
+            function setFilter(mode, btn) {
+                s.filter = mode;
+                document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 
-                // CSS Preview
-                let css = 'none';
-                if(name==='bw') css='grayscale(1) contrast(1.2)';
-                if(name==='1990') css='sepia(0.4) contrast(0.9) brightness(1.1)';
-                if(name==='cyber') css='saturate(2) contrast(1.3) hue-rotate(-10deg)';
-                El.video.style.filter = css;
-                AudioEngine.beep();
+                // Remove all filter classes first
+                D.video.classList.remove('f-fuji', 'f-1998', 'f-cctv', 'f-bw');
+                
+                if(mode !== 'normal') D.video.classList.add('f-'+mode);
+                Aud.playTone(600, 'sine', 0.05);
             }
 
-            // --- CAPTURE SEQUENCE ---
-            async function snapSequence() {
-                if(S.isShooting) return;
-                S.isShooting = true;
-                S.photos = [];
-                El.frameCount.innerText = '0';
+            function toggleLight() {
+                s.ringLight = !s.ringLight;
+                if(s.ringLight) { D.ring.classList.add('on'); D.lightBtn.classList.add('active'); }
+                else { D.ring.classList.remove('on'); D.lightBtn.classList.remove('active'); }
+            }
 
-                for(let i=1; i<=CFG.shots; i++) {
-                    await countdown(3);
-                    await capturePhoto();
-                    El.frameCount.innerText = i;
-                    await new Promise(r => setTimeout(r, 800)); // Review time
-                }
+            function toggleDate() {
+                s.showDate = !s.showDate;
+                if(s.showDate) D.dateBtn.classList.add('active');
+                else D.dateBtn.classList.remove('active');
+            }
+
+            async function snap() {
+                if(s.processing) return;
+                s.processing = true; s.photos = [];
                 
-                finishSession();
+                for(let i=0; i<C.shots; i++) {
+                    await countdown(3);
+                    await capture();
+                    await new Promise(r => setTimeout(r, 800));
+                }
+                process();
             }
 
             function countdown(n) {
                 return new Promise(r => {
-                    let c = n;
-                    El.count.style.display = 'block';
-                    El.count.innerText = c;
+                    let c = n; D.count.style.display = 'block'; D.count.innerText = c;
+                    Aud.playCount();
                     const t = setInterval(() => {
-                        AudioEngine.beep();
                         c--;
-                        if(c>0) El.count.innerText=c;
-                        else {
-                            clearInterval(t);
-                            El.count.style.display='none';
-                            r();
-                        }
+                        if(c>0) { D.count.innerText = c; Aud.playCount(); }
+                        else { clearInterval(t); D.count.style.display = 'none'; r(); }
                     }, 1000);
                 });
             }
 
-            function capturePhoto() {
+            function capture() {
                 return new Promise(r => {
-                    AudioEngine.shutter();
-                    // Flash
-                    El.flash.style.opacity = 1;
-                    setTimeout(() => El.flash.style.opacity = 0, 150);
-
-                    // Capture Frame
+                    Aud.playShutter();
+                    D.flash.classList.add('do-flash');
+                    setTimeout(() => D.flash.classList.remove('do-flash'), 300);
+                    
                     const cvs = document.createElement('canvas');
-                    cvs.width = El.video.videoWidth;
-                    cvs.height = El.video.videoHeight;
+                    cvs.width = D.video.videoWidth; cvs.height = D.video.videoHeight;
                     const ctx = cvs.getContext('2d');
                     
-                    // Mirror & Draw
+                    // Mirror
                     ctx.translate(cvs.width, 0); ctx.scale(-1, 1);
                     
-                    // Apply Canvas Filters (matching CSS)
-                    if(S.filter==='bw') ctx.filter = 'grayscale(1) contrast(1.2)';
-                    if(S.filter==='1990') ctx.filter = 'sepia(0.4) contrast(0.9) brightness(1.1)';
-                    if(S.filter==='cyber') ctx.filter = 'saturate(2) contrast(1.3) hue-rotate(-10deg)';
+                    // Apply Filter to Canvas Context (New Browser Feature)
+                    if(s.filter === 'fuji') ctx.filter = 'contrast(1.1) brightness(1.1) saturate(0.9) hue-rotate(-5deg)';
+                    else if(s.filter === '1998') ctx.filter = 'sepia(0.2) saturate(1.4) contrast(1.1) hue-rotate(-10deg)';
+                    else if(s.filter === 'cctv') ctx.filter = 'grayscale(1) sepia(1) hue-rotate(50deg) saturate(3) contrast(1.5)';
+                    else if(s.filter === 'bw') ctx.filter = 'grayscale(1) contrast(1.2)';
                     
-                    ctx.drawImage(El.video, 0, 0);
-                    S.photos.push(cvs);
-                    r();
+                    ctx.drawImage(D.video, 0, 0);
+                    ctx.filter = 'none'; // reset
+
+                    s.photos.push(cvs);
+                    setTimeout(r, 100);
                 });
             }
 
-            // --- RENDERING & UPLOAD ---
-            async function finishSession() {
-                if(S.stream) S.stream.getTracks().forEach(t => t.stop());
-                switchScreen('result');
-                
-                // 1. GENERATE STRIP
-                updateStatus(10, "GENERATING LAYOUT...");
-                const finalCanvas = await generateStripCanvas();
-                const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.95);
-                
-                El.strip.src = dataUrl;
-                
-                // 2. PRINT ANIMATION
-                updateStatus(30, "PRINTING...");
-                AudioEngine.printNoise();
-                setTimeout(() => {
-                    El.strip.classList.add('printed');
-                }, 100);
+            function process() {
+                if(s.stream) s.stream.getTracks().forEach(t=>t.stop());
 
-                // 3. UPLOAD TO CLOUD
-                updateStatus(50, "UPLOADING TO CLOUD...");
-                try {
-                    const url = await uploadToImgBB(dataUrl);
-                    updateStatus(100, "COMPLETE");
-                    
-                    // 4. SHOW QR
-                    new QRCode(document.getElementById("qrcode"), {
-                        text: url,
-                        width: 80, height: 80,
-                        colorDark : "#000000", colorLight : "#ffffff"
-                    });
-                    
-                    setTimeout(() => {
-                        El.loader.style.opacity = 0;
-                        setTimeout(() => El.loader.style.display='none', 500);
-                        El.actions.classList.add('show');
-                    }, 1000);
+                const f = s.frame;
+                let stripW = C.stripW; 
+                let photoW = 520, photoH = (photoW*3)/4;
+                let gap = 30, head = 140, foot = 100;
+                let H = head + (photoH*C.shots) + (gap*(C.shots-1)) + foot;
 
-                } catch(e) {
-                    updateStatus(0, "UPLOAD FAILED. CHECK INTERNET.");
-                    console.error(e);
+                D.canvas.width = stripW; D.canvas.height = H;
+                const ctx = D.canvas.getContext('2d');
+
+                // 1. BACKGROUND
+                if(f === 'fuji') {
+                    ctx.fillStyle = '#004d40'; ctx.fillRect(0,0,stripW,H);
+                    ctx.strokeStyle = '#00695c'; ctx.lineWidth = 2; ctx.strokeRect(10,10,stripW-20,H-20);
+                } else if (f === 'emoji') {
+                    const grd = ctx.createLinearGradient(0,0,0,H); grd.addColorStop(0,"#E6E6FA"); grd.addColorStop(1,"#FFF0F5");
+                    ctx.fillStyle = grd; ctx.fillRect(0,0,stripW,H);
+                    // Draw random emojis
+                    ctx.font = "40px Arial";
+                    for(let i=0; i<40; i++) {
+                         ctx.save();
+                         ctx.translate(Math.random()*stripW, Math.random()*H);
+                         ctx.rotate(Math.random());
+                         ctx.fillStyle = "rgba(0,0,0,0.05)";
+                         ctx.fillText(C.emojiList[Math.floor(Math.random()*C.emojiList.length)], 0, 0);
+                         ctx.restore();
+                    }
+                } else if(f === 'disco') {
+                    ctx.fillStyle = '#111'; ctx.fillRect(0,0,stripW,H);
+                } else {
+                    ctx.fillStyle = '#f8f8f8'; ctx.fillRect(0,0,stripW,H);
+                }
+
+                // 2. HEADER
+                ctx.textAlign = 'center';
+                if(f === 'fuji') {
+                    ctx.fillStyle = '#e0f2f1'; ctx.font = 'bold 50px "DM Sans"'; ctx.fillText('FUJIFILM', stripW/2, 80);
+                    ctx.font = '24px "DM Sans"'; ctx.fillText('PRO NEG. STANDARD', stripW/2, 115);
+                } else if(f === 'emoji') {
+                    ctx.fillStyle = '#4169E1'; ctx.font = '700 60px "Fredoka"'; ctx.fillText('SENA', stripW/2, 80);
+                    ctx.font = '500 30px "Fredoka"'; ctx.fillText('PHOTOBOOTH', stripW/2, 120);
+                } else {
+                    ctx.fillStyle = (f==='disco')?'#fff':'#000';
+                    ctx.font = 'bold 50px "DM Sans"'; ctx.fillText('SENA', stripW/2, 80);
+                    ctx.font = '24px "DM Sans"'; ctx.fillText('PHOTOBOOTH', stripW/2, 115);
+                }
+
+                // 3. PHOTOS
+                let y = head;
+                s.photos.forEach(p => {
+                    const sR = p.width/p.height; const dR=4/3;
+                    let sx, sy, sw, sh;
+                    if(sR > dR) { sh=p.height; sw=sh*dR; sx=(p.width-sw)/2; sy=0; }
+                    else { sw=p.width; sh=sw/dR; sx=0; sy=(p.height-sh)/2; }
+                    
+                    if(f === 'emoji') {
+                        ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=10; ctx.fillStyle="#fff";
+                        ctx.fillRect((stripW-photoW)/2-10, y-10, photoW+20, photoH+20);
+                        ctx.shadowBlur=0;
+                    }
+                    
+                    ctx.drawImage(p, sx, sy, sw, sh, (stripW-photoW)/2, y, photoW, photoH);
+                    
+                    // Timestamp
+                    if(s.showDate) {
+                        ctx.fillStyle = "rgba(255, 165, 0, 0.8)"; // Orange timestamp like old film
+                        ctx.font = '20px "VT323"'; ctx.textAlign = 'right';
+                        ctx.fillText(new Date().toLocaleDateString(), (stripW+photoW)/2 - 10, y + photoH - 10);
+                        ctx.textAlign = 'center'; // reset
+                    }
+
+                    y += photoH + gap;
+                });
+
+                // 4. FOOTER
+                if(f === 'fuji') {
+                    ctx.fillStyle = '#80cbc4'; ctx.font = '16px "DM Sans"';
+                    ctx.fillText("DEVELOPED BY SENA OS", stripW/2, H - 40);
+                } else if (f === 'emoji') {
+                    ctx.font = '30px "Apple Color Emoji"'; ctx.fillText("👀 🛝 🥽 🫧", stripW/2, H - 40);
+                } else {
+                    ctx.fillStyle = '#888'; ctx.font = '20px "VT323"';
+                    ctx.fillText(new Date().toDateString() + " • MEMORIES", stripW/2, H - 40);
+                }
+
+                // FINALIZE
+                const finalUrl = D.canvas.toDataURL('image/jpeg', 0.95);
+                D.final.src = finalUrl;
+                switchScreen('res');
+                Aud.playSuccess();
+                launchConfetti();
+                
+                // Generate QR
+                document.getElementById('qrcode').innerHTML = "";
+                new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 100, height: 100 });
+            }
+
+            function launchConfetti() {
+                for(let i=0; i<50; i++) {
+                    const c = document.createElement('div');
+                    c.className = 'confetti';
+                    c.style.left = Math.random()*100 + 'vw';
+                    c.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+                    c.style.animationDuration = (Math.random()*2 + 2) + 's';
+                    document.body.appendChild(c);
+                    setTimeout(() => c.remove(), 4000);
                 }
             }
 
-            function generateStripCanvas() {
-                return new Promise(r => {
-                    const ctx = El.canvas.getContext('2d');
-                    
-                    // Config Dimensions (Tall Strip)
-                    const W = CFG.stripW;
-                    const photoW = W - 60; // 30px padding each side
-                    const photoH = (photoW * 3) / 4;
-                    const headerH = 200;
-                    const footerH = 150;
-                    const gap = 30;
-                    const H = headerH + footerH + (photoH * CFG.shots) + (gap * (CFG.shots - 1));
-
-                    El.canvas.width = W;
-                    El.canvas.height = H;
-
-                    // Background (Black Paper)
-                    ctx.fillStyle = '#0a0a0a';
-                    ctx.fillRect(0,0,W,H);
-                    
-                    // Decorative Lines
-                    ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
-                    ctx.beginPath(); ctx.moveTo(30, headerH-20); ctx.lineTo(W-30, headerH-20); ctx.stroke();
-
-                    // Header
-                    ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-                    ctx.font = 'bold 80px "Space Grotesk"';
-                    ctx.fillText('SENA', W/2, 100);
-                    ctx.font = '30px "Space Grotesk"';
-                    ctx.letterSpacing = '5px';
-                    ctx.fillText('SYSTEM OS 3.0', W/2, 150);
-
-                    // Photos
-                    let y = headerH;
-                    S.photos.forEach(p => {
-                        // Crop logic
-                        const sRatio = p.width / p.height;
-                        const dRatio = photoW / photoH;
-                        let sx, sy, sw, sh;
-                        if(sRatio > dRatio) { sh=p.height; sw=sh*dRatio; sx=(p.width-sw)/2; sy=0; }
-                        else { sw=p.width; sh=sw/dRatio; sx=0; sy=(p.height-sh)/2; }
-
-                        // Draw white border
-                        ctx.fillStyle = '#fff';
-                        ctx.fillRect((W-photoW)/2 - 5, y - 5, photoW+10, photoH+10);
-
-                        ctx.drawImage(p, sx, sy, sw, sh, (W-photoW)/2, y, photoW, photoH);
-                        y += photoH + gap;
-                    });
-
-                    // Footer
-                    ctx.fillStyle = '#666'; ctx.font = '24px "JetBrains Mono"';
-                    const date = new Date().toLocaleDateString('en-GB') + " " + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                    ctx.fillText(date, W/2, H - 60);
-                    
-                    // Barcode decoration
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(W/2 - 50, H - 100, 100, 10);
-
-                    r(El.canvas);
-                });
+            function download() {
+                const a = document.createElement('a'); a.download = `SENA_${Date.now()}.jpg`;
+                a.href = D.final.src; document.body.appendChild(a); a.click(); document.body.removeChild(a);
             }
 
-            async function uploadToImgBB(base64) {
-                const formData = new FormData();
-                formData.append("image", base64.split(',')[1]);
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${CFG.apiKey}`, {
-                    method: 'POST', body: formData
-                });
-                const data = await res.json();
-                if(data.success) return data.data.url_viewer;
-                else throw new Error('API Error');
-            }
+            // Init Clock
+            setInterval(() => {
+                const d = new Date();
+                D.clock.innerText = d.getHours().toString().padStart(2,'0')+":"+d.getMinutes().toString().padStart(2,'0');
+            }, 1000);
 
-            function updateStatus(pct, msg) {
-                El.progress.style.width = pct + '%';
-                El.status.innerText = msg;
-            }
+            // Default
+            D.dateBtn.classList.add('active');
 
-            return { init, setFilter, snapSequence };
+            return { start, selectFrame, setFilter, snap, toggleLight, toggleDate, download };
         })();
     </script>
 </body>
