@@ -139,7 +139,15 @@
         .strip-footer { text-align: center; font-size: 0.6rem; margin-top: 10px; font-family: var(--font-code); opacity: 0.7; white-space: nowrap; }
 
         .mini-strip.polaroid { background: #f8f8f8; color: #000; border: 1px solid #ddd; }
-        .mini-strip.disco { background: #111; color: #fff; border: 1px solid #333; background-image: radial-gradient(white 15%, transparent 16%), radial-gradient(white 15%, transparent 16%); background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+        
+        /* แก้ไข CSS DISCO ให้เป็นสีเงิน */
+        .mini-strip.disco { 
+            background: linear-gradient(135deg, #e0e0e0 0%, #ffffff 50%, #c0c0c0 100%); 
+            color: #000; 
+            border: 2px solid #999; 
+            box-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+        
         .mini-strip.love { background: #fff; color: #000; border: 3px solid #ff0000; }
         .mini-strip.system { background: #000; color: #0f0; border: 2px solid #0f0; font-family: var(--font-code); }
         .mini-strip.black { background: #1a1a1a; color: #ccc; border: 1px solid #444; }
@@ -326,11 +334,13 @@
                     <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
                     <div class="strip-footer">CLEAN WHITE</div>
                 </div>
+                
                 <div class="mini-strip disco" onclick="OS.selectFrame('disco')">
                     <div class="strip-header">🪩 SENA 🪩<br><span>DISCO</span></div>
-                    <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
-                    <div class="strip-footer">NIGHT VIBE</div>
+                    <div class="strip-photos"><div class="photo-slot" style="border:1px solid #333;"></div><div class="photo-slot" style="border:1px solid #333;"></div><div class="photo-slot" style="border:1px solid #333;"></div></div>
+                    <div class="strip-footer">SILVER Y2K</div>
                 </div>
+
                 <div class="mini-strip love" onclick="OS.selectFrame('love')">
                     <div class="strip-header">I ♥ SENA</div>
                     <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
@@ -694,15 +704,32 @@
                 D.canvas.width = stripW; D.canvas.height = H;
                 const ctx = D.canvas.getContext('2d');
 
+                // --- 1. BACKGROUND LOGIC ---
                 if(f === 'disco') {
-                    ctx.fillStyle = '#111'; ctx.fillRect(0,0,stripW,H);
-                    ctx.fillStyle = 'rgba(255,255,255,0.1)'; for(let i=0; i<100; i++) ctx.fillRect(Math.random()*stripW, Math.random()*H, 4, 4);
-                } else if(f === 'black' || f === 'neon') { ctx.fillStyle = '#111'; ctx.fillRect(0,0,stripW,H); }
+                    // SILVER HOLOGRAPHIC (Classic Disco)
+                    const grad = ctx.createLinearGradient(0, 0, stripW, H);
+                    grad.addColorStop(0, '#d8d8d8');
+                    grad.addColorStop(0.2, '#ffffff');
+                    grad.addColorStop(0.4, '#c0c0c0');
+                    grad.addColorStop(0.6, '#e0e0e0');
+                    grad.addColorStop(0.8, '#ffffff');
+                    grad.addColorStop(1, '#d0d0d0');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0,0,stripW,H);
+
+                    // Add Noise/Grain for Glitter effect
+                    for(let i=0; i<3000; i++) {
+                         ctx.fillStyle = Math.random() > 0.5 ? '#fff' : '#888';
+                         ctx.fillRect(Math.random()*stripW, Math.random()*H, 2, 2);
+                    }
+                } 
+                else if(f === 'black' || f === 'neon') { ctx.fillStyle = '#111'; ctx.fillRect(0,0,stripW,H); }
                 else if(f === 'system') { ctx.fillStyle = '#000'; ctx.fillRect(0,0,stripW,H); }
                 else if(f === 'thai-chic') { ctx.fillStyle = '#fff5e6'; ctx.fillRect(0,0,stripW,H); }
                 else if(f === 'thai-red') { ctx.fillStyle = '#4a0000'; ctx.fillRect(0,0,stripW,H); ctx.fillStyle='rgba(0,0,0,0.2)'; for(let i=0;i<500;i++) ctx.fillRect(Math.random()*stripW, Math.random()*H, 1, 1); }
                 else { ctx.fillStyle = '#f8f8f8'; ctx.fillRect(0,0,stripW,H); }
 
+                // --- 2. HEADER TEXT LOGIC ---
                 ctx.textAlign = 'center';
                 if(f === 'love') {
                     ctx.fillStyle = '#000'; ctx.font = 'bold 60px "DM Sans"'; ctx.fillText('I', stripW/2 - 130, 100);
@@ -726,12 +753,18 @@
                     ctx.fillStyle = '#00f3ff'; ctx.shadowColor='#00f3ff'; ctx.shadowBlur=15; ctx.font = '800 50px "DM Sans"'; ctx.fillText('SENA MARKET', stripW/2, 100); ctx.shadowBlur=0;
                 } else if(f === 'mono') {
                      ctx.fillStyle = '#000'; ctx.font = '800 50px "DM Sans"'; ctx.fillText('MONO GRID', stripW/2, 100);
+                } else if(f === 'disco') {
+                    // Disco Text (Black on Silver)
+                    ctx.fillStyle = '#000'; 
+                    ctx.font = '800 50px "DM Sans"'; ctx.fillText('SENA DISCO', stripW/2, 80);
+                    ctx.font = '400 24px "VT323"'; ctx.fillText('★ SILVER Y2K EDITION ★', stripW/2, 115);
                 } else {
-                    ctx.fillStyle = (f==='black'||f==='disco') ? '#fff' : '#000';
+                    ctx.fillStyle = (f==='black') ? '#fff' : '#000';
                     ctx.font = 'bold 40px "DM Sans"'; ctx.fillText('SENA', stripW/2, 80);
                     ctx.font = '700 24px "DM Sans"'; ctx.fillText('PHOTOBOOTH', stripW/2, 120);
                 }
 
+                // --- 3. PHOTO LOOP ---
                 let y = head;
                 s.photos.forEach(p => {
                     const sR = p.width/p.height; const dR=4/3;
@@ -745,15 +778,18 @@
                     else if(f === 'thai-red') { ctx.strokeStyle = '#ff5555'; ctx.lineWidth=4; ctx.strokeRect((stripW-photoW)/2, y, photoW, photoH); }
                     else if(f === 'neon') { ctx.strokeStyle = '#00f3ff'; ctx.lineWidth=3; ctx.shadowColor='#00f3ff'; ctx.shadowBlur=10; ctx.strokeRect((stripW-photoW)/2, y, photoW, photoH); ctx.shadowBlur=0; }
                     else if(f === 'mono') { ctx.strokeStyle = '#000'; ctx.lineWidth=4; ctx.strokeRect((stripW-photoW)/2, y, photoW, photoH); }
+                    else if(f === 'disco') { ctx.strokeStyle = '#333'; ctx.lineWidth=2; ctx.strokeRect((stripW-photoW)/2, y, photoW, photoH); }
 
                     ctx.drawImage(p, sx, sy, sw, sh, (stripW-photoW)/2, y, photoW, photoH);
                     y += photoH + gap;
                 });
 
+                // --- 4. FOOTER ---
                 const quote = C.quotes[Math.floor(Math.random()*C.quotes.length)];
                 ctx.font = '20px "VT323"'; ctx.textAlign = 'center'; 
-                ctx.fillStyle = (f==='system'||f==='neon') ? '#0f0' : (f==='black'||f==='disco') ? '#888' : (f==='thai-red') ? '#ffcccc' : '#666';
+                ctx.fillStyle = (f==='system'||f==='neon') ? '#0f0' : (f==='black') ? '#888' : (f==='thai-red') ? '#ffcccc' : '#666';
                 if(f==='neon') ctx.fillStyle = '#00f3ff';
+                if(f==='disco') ctx.fillStyle = '#333'; // Dark grey for Disco footer
                 
                 const date = new Date().toLocaleDateString('en-GB');
                 let footerText = date + "  •  " + quote;
@@ -781,25 +817,21 @@
                 const log = document.getElementById('log-text');
                 const fill = document.getElementById('load-fill');
                 
-                // แก้ไขแล้ว: ปลดล็อคให้ใช้งาน Key นี้ได้ (ตรวจสอบแค่ว่าว่างไหม)
                 if (API_KEY === '') {
                     alert("⚠️ ยังไม่ได้ใส่ API Key!\nกรุณาไปที่ api.imgbb.com เพื่อรับ Key");
                     log.innerText = "> MISSING API KEY";
                     return;
                 }
 
-                // เริ่มหลอดโหลด
                 let p = 0;
                 const int = setInterval(() => { if(p<90) p+=5; fill.style.width=p+"%"; }, 100);
 
                 try {
                     const formData = new FormData();
-                    // ตัด header ของ base64 ออก
                     formData.append("image", base64.split(',')[1]); 
 
                     log.innerText = "> CONNECTING SERVER...";
 
-                    // ส่งไปที่ ImgBB
                     const res = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
                         method: "POST",
                         body: formData
@@ -811,7 +843,6 @@
                     fill.style.width="100%";
 
                     if (data.success) {
-                        // สำเร็จ: เอา URL มาสร้าง QR Code
                         const imageUrl = data.data.url;
                         log.innerText = "> UPLOAD COMPLETE!";
                         
