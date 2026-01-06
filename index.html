@@ -443,7 +443,7 @@
         const OS = (function() {
             
             // =========================================================
-            //  ffc90ad0bc5c7e0c056b68ef7430304a
+            //  API KEY SETTINGS
             // =========================================================
             const API_KEY = 'ffc90ad0bc5c7e0c056b68ef7430304a'; 
 
@@ -781,9 +781,9 @@
                 const log = document.getElementById('log-text');
                 const fill = document.getElementById('load-fill');
                 
-                // เช็คว่าใส่ Key หรือยัง
-                if (API_KEY === 'ffc90ad0bc5c7e0c056b68ef7430304a' || API_KEY === '') {
-                    alert("⚠️ ยังไม่ได้ใส่ API Key!\nกรุณาไปที่ api.imgbb.com เพื่อรับ Key มาใส่ในบรรทัดที่ 466");
+                // แก้ไขแล้ว: ปลดล็อคให้ใช้งาน Key นี้ได้ (ตรวจสอบแค่ว่าว่างไหม)
+                if (API_KEY === '') {
+                    alert("⚠️ ยังไม่ได้ใส่ API Key!\nกรุณาไปที่ api.imgbb.com เพื่อรับ Key");
                     log.innerText = "> MISSING API KEY";
                     return;
                 }
