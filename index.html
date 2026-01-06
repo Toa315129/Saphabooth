@@ -20,10 +20,9 @@
             --bg-color: #050505;
             --primary: #4169E1;
             --alert: #FF3333; 
-            --fuji-green: #004d40;
+            --sidebar-bg: #111;
             --font-ui: 'DM Sans', sans-serif;
             --font-code: 'VT323', monospace;
-            --font-fun: 'Fredoka', sans-serif;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -38,7 +37,18 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* Confetti Effect */
+        /* GRAIN & VIGNETTE */
+        .scanlines {
+            position: absolute; inset: 0; pointer-events: none; z-index: 900;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+        }
+        .grain {
+            position: absolute; inset: 0; pointer-events: none; z-index: 899; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* CONFETTI */
         .confetti {
             position: fixed; width: 10px; height: 10px; background-color: #f00;
             animation: confetti-fall 3s linear forwards; z-index: 9999; pointer-events: none;
@@ -46,17 +56,6 @@
         @keyframes confetti-fall {
             0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
             100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-        }
-
-        /* Scanlines & CRT */
-        .scanlines {
-            position: absolute; inset: 0; pointer-events: none; z-index: 900;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-            background-size: 100% 4px;
-        }
-        .grain {
-            position: absolute; inset: 0; pointer-events: none; z-index: 899; opacity: 0.05;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
         /* SCREENS TRANSITION */
@@ -78,9 +77,9 @@
         }
         .title-group { animation: float 6s ease-in-out infinite; }
         .main-title {
-            font-size: 4.5rem; font-weight: 800; color: #fff;
-            line-height: 0.9; letter-spacing: -2px; margin-bottom: 20px;
-            text-shadow: 0 0 30px rgba(65, 105, 225, 0.6);
+            font-size: 5rem; font-weight: 800; color: #fff; line-height: 0.9; 
+            letter-spacing: -3px; margin-bottom: 20px;
+            text-shadow: 0 0 40px rgba(65, 105, 225, 0.5);
         }
         .sub-title { font-family: var(--font-code); color: #888; letter-spacing: 4px; font-size: 1.2rem; }
         @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
@@ -88,10 +87,9 @@
         .btn-start {
             margin-top: 50px; background: transparent; border: 2px solid #fff;
             padding: 20px 60px; color: #fff; font-family: var(--font-code); font-size: 2rem;
-            cursor: pointer; position: relative; overflow: hidden; transition: 0.3s;
+            cursor: pointer; transition: 0.3s;
         }
         .btn-start:hover { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
-        .btn-start:active { transform: scale(0.95); }
 
         /* =========================================
            3. FRAMES SELECTION
@@ -99,86 +97,116 @@
         #screen-frames { background: #111; padding: 20px; justify-content: center; }
         .frame-scroller {
             display: flex; gap: 30px; overflow-x: auto; padding: 40px 20px; width: 100%;
-            justify-content: flex-start; align-items: center; scrollbar-width: none;
+            justify-content: center; align-items: center; scrollbar-width: none;
         }
         .frame-scroller::-webkit-scrollbar { display: none; }
 
         .mini-strip {
             width: 140px; height: 380px; flex-shrink: 0;
             display: flex; flex-direction: column; padding: 10px;
-            cursor: pointer; transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer; transition: 0.3s;
             box-shadow: 0 10px 20px rgba(0,0,0,0.5); border-radius: 4px; position: relative;
         }
         .mini-strip:hover { transform: translateY(-20px) scale(1.05); z-index: 100; box-shadow: 0 30px 50px rgba(0,0,0,0.8); }
-        .mini-strip.selected { border: 4px solid var(--primary); transform: scale(1.05); }
-
+        
         /* Frame Styles */
-        .mini-strip.emoji { background: #E6E6FA; color: #555; background-image: radial-gradient(#B0E0E6 20%, transparent 20%), radial-gradient(#FFC0CB 20%, transparent 20%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
-        .mini-strip.polaroid { background: #fff; color: #000; border: 1px solid #ccc; }
-        .mini-strip.disco { background: #111; color: #fff; border: 1px solid #444; background-image: radial-gradient(white 1px, transparent 1px); background-size: 15px 15px; }
         .mini-strip.fuji { background: #004d40; color: #e0f2f1; border: 1px solid #00695c; }
+        .mini-strip.emoji { background: #FFF0F5; color: #555; border: 1px solid #FFC0CB; }
+        .mini-strip.polaroid { background: #fff; color: #000; border: 1px solid #ccc; }
+        .mini-strip.disco { background: #111; color: #fff; border: 1px solid #444; }
         
         .strip-header { text-align: center; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px; }
         .photo-slot { flex: 1; background: rgba(0,0,0,0.1); margin-bottom: 5px; border: 1px dashed rgba(0,0,0,0.2); }
         .strip-footer { text-align: center; font-size: 0.6rem; margin-top: 5px; font-family: var(--font-code); }
 
         /* =========================================
-           4. CAMERA & RING LIGHT
+           4. CAMERA UI (SIDEBAR LAYOUT)
            ========================================= */
-        #screen-cam { background: #000; justify-content: space-between; position: relative; }
+        #screen-cam { 
+            background: #000; 
+            flex-direction: row; /* Horizontal Layout */
+            position: relative; 
+        }
         
         /* Ring Light Effect */
         .ring-light {
-            position: absolute; inset: 0; border: 0px solid rgba(255,255,255,0.8);
+            position: absolute; inset: 0; border: 0px solid rgba(255,255,255,0.9);
             pointer-events: none; z-index: 50; transition: border-width 0.3s;
             box-shadow: inset 0 0 50px rgba(255,255,255,0);
         }
-        .ring-light.on { border-width: 15px; box-shadow: inset 0 0 50px rgba(255,255,255,0.5); }
+        .ring-light.on { border-width: 20px; box-shadow: inset 0 0 80px rgba(255,255,255,0.6); }
 
-        .ui-top { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 60; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        /* VIEWPORT (LEFT) */
+        .viewport-container {
+            flex: 1; position: relative; height: 100%; 
+            display: flex; flex-direction: column;
+            background: #000;
+        }
+        .cam-header {
+            position: absolute; top: 0; left: 0; right: 0; z-index: 60;
+            padding: 15px 20px; display: flex; justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+        .rec-tag { color: var(--alert); font-weight: bold; font-family: var(--font-code); animation: blink 2s infinite;}
         .clock { font-family: var(--font-code); font-size: 1.2rem; }
-        
-        .viewport { flex: 1; position: relative; overflow: hidden; background: #111; display: flex; justify-content: center; align-items: center; }
-        video#video-feed { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: filter 0.3s; }
-        video#video-feed.no-mirror { transform: scaleX(1); }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* NEW FILTERS CSS */
+        video#video-feed { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        
+        /* FILTERS CSS */
         .f-fuji { filter: contrast(1.1) brightness(1.1) saturate(0.9) hue-rotate(-5deg) !important; }
         .f-1998 { filter: sepia(0.2) saturate(1.4) contrast(1.1) hue-rotate(-10deg) !important; }
-        .f-cctv { filter: grayscale(1) sepia(1) hue-rotate(50deg) saturate(3) contrast(1.5) !important; }
+        .f-cctv { filter: grayscale(1) sepia(1) hue-rotate(50deg) saturate(2) contrast(1.4) !important; }
         .f-bw { filter: grayscale(1) contrast(1.2) !important; }
         
         #countdown {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
             font-size: 15rem; font-weight: 800; color: #fff; display: none;
-            text-shadow: 4px 4px 0 #000; z-index: 100; font-variant-numeric: tabular-nums;
+            text-shadow: 4px 4px 0 #000; z-index: 100;
         }
 
-        .cam-controls {
-            height: 140px; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 60; padding-bottom: 20px;
+        /* SIDEBAR CONTROLS (RIGHT) */
+        .cam-sidebar {
+            width: 140px; height: 100%;
+            background: var(--sidebar-bg);
+            border-left: 1px solid #333;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            padding: 20px 10px; z-index: 60;
         }
-        .filter-scroll {
-            display: flex; gap: 10px; overflow-x: auto; width: 100%; padding: 10px 20px; margin-bottom: 10px;
-            justify-content: center; scrollbar-width: none;
+
+        .filter-group {
+            display: flex; flex-direction: column; gap: 10px; width: 100%;
+            align-items: center; overflow-y: auto; max-height: 50%;
         }
         .btn-filter {
-            background: #222; border: 1px solid #444; color: #888; padding: 5px 15px; border-radius: 20px;
-            font-size: 0.8rem; cursor: pointer; white-space: nowrap; font-family: var(--font-code); transition: 0.2s;
+            width: 100%; padding: 10px 0;
+            background: transparent; border: 1px solid #444; color: #888; 
+            border-radius: 6px; font-size: 0.75rem; cursor: pointer; 
+            font-family: var(--font-code); transition: 0.2s;
         }
-        .btn-filter.active { background: #fff; color: #000; font-weight: bold; transform: scale(1.1); }
-        .btn-filter.fuji-mode { color: #00d2ff; border-color: #00d2ff; }
+        .btn-filter:hover { background: #222; }
+        .btn-filter.active { background: #fff; color: #000; font-weight: bold; border-color: #fff; }
+        .btn-filter.fuji-mode { color: #00d2ff; border-color: #00695c; }
+        .btn-filter.fuji-mode.active { background: #00d2ff; border-color: #00d2ff; }
 
-        .shutter-row { display: flex; align-items: center; gap: 30px; width: 100%; justify-content: center; }
-        .btn-icon { background: none; border: none; font-size: 1.5rem; cursor: pointer; opacity: 0.7; transition: 0.2s; color: #fff; }
-        .btn-icon:hover { opacity: 1; transform: scale(1.1); }
-        .btn-icon.active { color: #ffd700; opacity: 1; text-shadow: 0 0 10px #ffd700; }
-
+        .shutter-group {
+            display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;
+        }
+        .btn-round {
+            width: 45px; height: 45px; border-radius: 50%; border: 1px solid #555;
+            background: #222; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; transition: 0.2s;
+        }
+        .btn-round.active { background: #ffd700; color: #000; border-color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.5); }
+        
         .btn-shutter {
-            width: 80px; height: 80px; border: 4px solid #fff; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
+            width: 90px; height: 90px; border: 4px solid #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background: transparent; margin-bottom: 10px;
         }
-        .shutter-inner { width: 66px; height: 66px; background: #fff; border-radius: 50%; transition: 0.1s; }
-        .btn-shutter:active .shutter-inner { transform: scale(0.85); background: #ddd; }
+        .shutter-inner { width: 74px; height: 74px; background: #fff; border-radius: 50%; transition: 0.1s; }
+        .btn-shutter:active .shutter-inner { transform: scale(0.9); background: #ccc; }
 
         /* =========================================
            5. RESULT & PRINT
@@ -186,9 +214,9 @@
         #screen-result { background: #111; flex-direction: row; gap: 40px; padding: 40px; justify-content: center; align-items: flex-start; overflow-y: auto;}
         
         .printer-slot {
-            width: 320px; height: auto; min-height: 500px;
+            width: 320px; min-height: 500px;
             background: #000; border: 10px solid #222; border-radius: 10px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8); overflow: hidden; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8); overflow: hidden;
         }
         .final-print { width: 100%; display: block; animation: slideUp 1s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -202,29 +230,31 @@
         }
         .btn-pri { background: var(--primary); color: #fff; }
         .btn-sec { background: transparent; border: 1px solid #555; color: #ccc; }
-        .btn-pri:hover { background: #3558c4; box-shadow: 0 5px 15px rgba(65, 105, 225, 0.4); }
+        .btn-pri:hover { background: #3558c4; }
 
         /* FLASH */
         #flash { position: fixed; inset: 0; background: #fff; z-index: 999; opacity: 0; pointer-events: none; }
         .do-flash { animation: flashAnim 0.3s ease-out; }
         @keyframes flashAnim { 0% { opacity: 1; background: #e0f7fa; } 100% { opacity: 0; } }
 
-        /* PRINT MEDIA QUERY */
-        @media print {
-            body * { visibility: hidden; }
-            #screen-result, #screen-result * { visibility: visible; }
-            #screen-result { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #fff; display: block; padding: 0; margin: 0; }
-            .printer-slot { border: none; box-shadow: none; width: 100%; max-width: 600px; margin: 0 auto; }
-            .result-ui { display: none; }
-            .scanlines, .grain { display: none; }
-        }
-
+        /* RESPONSIVE FOR MOBILE (Switch sidebar to bottom) */
         @media (max-width: 800px) {
-            #screen-result { flex-direction: column; align-items: center; padding-top: 80px; }
+            #screen-cam { flex-direction: column; }
+            .viewport-container { flex: 1; width: 100%; }
+            .cam-sidebar { 
+                width: 100%; height: auto; flex-direction: row; 
+                padding: 10px 20px; border-left: none; border-top: 1px solid #333;
+            }
+            .filter-group { flex-direction: row; width: auto; max-height: auto; gap: 5px; }
+            .shutter-group { flex-direction: row; width: auto; gap: 15px;}
+            .btn-filter { width: auto; padding: 5px 15px; white-space: nowrap; }
+            .btn-shutter { width: 60px; height: 60px; border-width: 3px; }
+            .shutter-inner { width: 48px; height: 48px; }
+            .btn-round { width: 35px; height: 35px; font-size: 0.9rem; }
+            
+            #screen-result { flex-direction: column; align-items: center; padding-top: 50px; }
             .frame-scroller { justify-content: flex-start; padding-left: 20px; }
-            .btn-start { padding: 15px 40px; font-size: 1.5rem; }
-            .main-title { font-size: 3rem; }
-            .mini-strip { width: 110px; height: 300px; }
+            .main-title { font-size: 3.5rem; }
         }
     </style>
 </head>
@@ -239,7 +269,7 @@
             <div class="sub-title">ULTIMATE PHOTOBOOTH</div>
         </div>
         <button class="btn-start" onclick="OS.start()">START</button>
-        <p style="margin-top:20px; opacity:0.5; font-size:0.8rem;">PRESS SPACEBAR TO START</p>
+        <p style="margin-top:20px; opacity:0.5; font-size:0.8rem; font-family:var(--font-code);">[SPACEBAR] TO START</p>
     </div>
 
     <div id="screen-frames" class="screen">
@@ -255,11 +285,11 @@
             </div>
 
              <div class="mini-strip emoji" onclick="OS.selectFrame('emoji')">
-                <div class="strip-header" style="color:#4169E1">Y2K VIBES</div>
+                <div class="strip-header" style="color:#FF69B4">Y2K VIBES</div>
                 <div class="photo-slot" style="background:#fff"></div>
                 <div class="photo-slot" style="background:#fff"></div>
                 <div class="photo-slot" style="background:#fff"></div>
-                <div class="strip-footer">👀🛝🥽🫧🍥</div>
+                <div class="strip-footer">👀🛝🥽🫧</div>
             </div>
 
             <div class="mini-strip polaroid" onclick="OS.selectFrame('polaroid')">
@@ -283,35 +313,36 @@
     <div id="screen-cam" class="screen">
         <div class="ring-light" id="ring-light"></div>
         
-        <div class="ui-top">
-            <div style="color:var(--alert); font-weight:bold;">● REC</div>
-            <div class="clock" id="clock">00:00</div>
-        </div>
-        
-        <div class="viewport">
+        <div class="viewport-container">
+            <div class="cam-header">
+                <div class="rec-tag">● REC</div>
+                <div class="clock" id="clock">00:00</div>
+            </div>
             <video id="video-feed" autoplay playsinline muted></video>
             <div id="countdown">3</div>
         </div>
 
-        <div class="cam-controls">
-            <div class="filter-scroll">
+        <div class="cam-sidebar">
+            <div class="filter-group">
+                <div style="font-size:0.6rem; color:#555; width:100%; text-align:center; margin-bottom:5px;">FILTERS</div>
                 <button class="btn-filter active" onclick="OS.setFilter('normal', this)">NORMAL</button>
-                <button class="btn-filter fuji-mode" onclick="OS.setFilter('fuji', this)">🗻 FUJI PRO</button>
+                <button class="btn-filter fuji-mode" onclick="OS.setFilter('fuji', this)">🗻 FUJI</button>
                 <button class="btn-filter" onclick="OS.setFilter('1998', this)">🌇 1998</button>
                 <button class="btn-filter" onclick="OS.setFilter('cctv', this)">👽 CCTV</button>
                 <button class="btn-filter" onclick="OS.setFilter('bw', this)">B/W</button>
             </div>
 
-            <div class="shutter-row">
-                <button class="btn-icon" id="btn-light" onclick="OS.toggleLight()">💡</button>
-                
+            <div class="shutter-group">
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-round" id="btn-light" onclick="OS.toggleLight()" title="Ring Light">💡</button>
+                    <button class="btn-round" id="btn-date" onclick="OS.toggleDate()" title="Timestamp">📅</button>
+                </div>
+
                 <div class="btn-shutter" onclick="OS.snap()">
                     <div class="shutter-inner"></div>
                 </div>
-
-                <button class="btn-icon" id="btn-date" onclick="OS.toggleDate()">📅</button>
+                <div style="font-size:0.6rem; color:#555; font-family:var(--font-code);">[SPACE]</div>
             </div>
-            <div style="font-size:0.7rem; color:#555; margin-top:10px; font-family:var(--font-code);">[SPACE] TO SHOOT</div>
         </div>
     </div>
 
@@ -377,7 +408,7 @@
                 dateBtn: document.getElementById('btn-date')
             };
 
-            // --- AUDIO SYSTEM (Dynamic) ---
+            // --- AUDIO SYSTEM ---
             const Aud = {
                 ctx: new (window.AudioContext||window.webkitAudioContext)(),
                 playTone: function(freq, type, dur, vol=0.1) {
@@ -492,10 +523,10 @@
                     // Mirror
                     ctx.translate(cvs.width, 0); ctx.scale(-1, 1);
                     
-                    // Apply Filter to Canvas Context (New Browser Feature)
+                    // Apply Filter to Canvas (New Browser API)
                     if(s.filter === 'fuji') ctx.filter = 'contrast(1.1) brightness(1.1) saturate(0.9) hue-rotate(-5deg)';
                     else if(s.filter === '1998') ctx.filter = 'sepia(0.2) saturate(1.4) contrast(1.1) hue-rotate(-10deg)';
-                    else if(s.filter === 'cctv') ctx.filter = 'grayscale(1) sepia(1) hue-rotate(50deg) saturate(3) contrast(1.5)';
+                    else if(s.filter === 'cctv') ctx.filter = 'grayscale(1) sepia(1) hue-rotate(50deg) saturate(2) contrast(1.4)';
                     else if(s.filter === 'bw') ctx.filter = 'grayscale(1) contrast(1.2)';
                     
                     ctx.drawImage(D.video, 0, 0);
@@ -523,7 +554,7 @@
                     ctx.fillStyle = '#004d40'; ctx.fillRect(0,0,stripW,H);
                     ctx.strokeStyle = '#00695c'; ctx.lineWidth = 2; ctx.strokeRect(10,10,stripW-20,H-20);
                 } else if (f === 'emoji') {
-                    const grd = ctx.createLinearGradient(0,0,0,H); grd.addColorStop(0,"#E6E6FA"); grd.addColorStop(1,"#FFF0F5");
+                    const grd = ctx.createLinearGradient(0,0,0,H); grd.addColorStop(0,"#FFF0F5"); grd.addColorStop(1,"#E6E6FA");
                     ctx.fillStyle = grd; ctx.fillRect(0,0,stripW,H);
                     // Draw random emojis
                     ctx.font = "40px Arial";
@@ -547,7 +578,7 @@
                     ctx.fillStyle = '#e0f2f1'; ctx.font = 'bold 50px "DM Sans"'; ctx.fillText('FUJIFILM', stripW/2, 80);
                     ctx.font = '24px "DM Sans"'; ctx.fillText('PRO NEG. STANDARD', stripW/2, 115);
                 } else if(f === 'emoji') {
-                    ctx.fillStyle = '#4169E1'; ctx.font = '700 60px "Fredoka"'; ctx.fillText('SENA', stripW/2, 80);
+                    ctx.fillStyle = '#FF69B4'; ctx.font = '700 60px "Fredoka"'; ctx.fillText('SENA', stripW/2, 80);
                     ctx.font = '500 30px "Fredoka"'; ctx.fillText('PHOTOBOOTH', stripW/2, 120);
                 } else {
                     ctx.fillStyle = (f==='disco')?'#fff':'#000';
@@ -571,11 +602,11 @@
                     
                     ctx.drawImage(p, sx, sy, sw, sh, (stripW-photoW)/2, y, photoW, photoH);
                     
-                    // Timestamp
+                    // Timestamp logic
                     if(s.showDate) {
-                        ctx.fillStyle = "rgba(255, 165, 0, 0.8)"; // Orange timestamp like old film
+                        ctx.fillStyle = "rgba(255, 140, 0, 0.9)"; // Orange timestamp like old film
                         ctx.font = '20px "VT323"'; ctx.textAlign = 'right';
-                        ctx.fillText(new Date().toLocaleDateString(), (stripW+photoW)/2 - 10, y + photoH - 10);
+                        ctx.fillText(new Date().toLocaleDateString(), (stripW+photoW)/2 - 15, y + photoH - 15);
                         ctx.textAlign = 'center'; // reset
                     }
 
