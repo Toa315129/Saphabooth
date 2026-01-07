@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>SENA PHOTOBOOTH | PRO EDITION</title>
+    <title>SENA PHOTOBOOTH | VIDEO EDITION</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -71,11 +71,7 @@
             z-index: 10;
             background: #000;
         }
-        /* แก้ไข: ให้หน้า Home แสดงผลทันทีเมื่อโหลดเสร็จ */
         .screen.active { opacity: 1; pointer-events: auto; }
-
-        /* ลบ CSS ของหน้า Boot ออก หรือซ่อนไว้ */
-        #screen-boot { display: none; }
 
         #screen-home {
             justify-content: center; align-items: center; text-align: center;
@@ -136,7 +132,7 @@
         .photo-slot::after { content: '📷'; position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size: 1.5rem; opacity: 0.2; }
         .strip-footer { text-align: center; font-size: 0.6rem; margin-top: 10px; font-family: var(--font-code); opacity: 0.7; white-space: nowrap; }
 
-        /* Existing Styles */
+        /* Styles for mini-strip previews */
         .mini-strip.polaroid { background: #f8f8f8; color: #000; border: 1px solid #ddd; }
         .mini-strip.disco { 
             background: #d4d4d4; color: #fff; border: 2px solid #fff; 
@@ -150,23 +146,9 @@
         .mini-strip.thai-red { background: #4a0000; color: #ffcccc; border: 2px solid #ff5555; font-family: 'JS Chanok', 'Prompt', sans-serif; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
         .mini-strip.neon { background: #000; color: #fff; border: 2px solid #00f3ff; box-shadow: 0 0 10px #00f3ff; }
         .mini-strip.mono { background: #fff; color: #000; border: 3px solid #000; }
-
-        /* --- NEW STYLES (3 แบบใหม่) --- */
-        .mini-strip.sena-cute { 
-            background: #ffe6f2; color: #ff66b3; border: 4px dashed #ff99cc; 
-            font-family: 'Fredoka', sans-serif; 
-        }
-        .mini-strip.sena-cool { 
-            background: #2b2b2b; color: #ccff00; border: 2px solid #ccff00; 
-            font-family: 'Prompt', sans-serif; 
-            background-image: repeating-linear-gradient(45deg, #333 0, #333 10px, #2b2b2b 10px, #2b2b2b 20px);
-        }
-        .mini-strip.sena-pop { 
-            background: #fff200; color: #000; border: 3px solid #000; 
-            font-family: 'Bangers', cursive;
-            box-shadow: 5px 5px 0px #000;
-        }
-        /* --------------------------- */
+        .mini-strip.sena-cute { background: #ffe6f2; color: #ff66b3; border: 4px dashed #ff99cc; font-family: 'Fredoka', sans-serif; }
+        .mini-strip.sena-cool { background: #2b2b2b; color: #ccff00; border: 2px solid #ccff00; font-family: 'Prompt', sans-serif; background-image: repeating-linear-gradient(45deg, #333 0, #333 10px, #2b2b2b 10px, #2b2b2b 20px); }
+        .mini-strip.sena-pop { background: #fff200; color: #000; border: 3px solid #000; font-family: 'Bangers', cursive; box-shadow: 5px 5px 0px #000; }
 
         #screen-cam { justify-content: space-between; background: #000; }
         
@@ -280,6 +262,9 @@
         }
         .btn-action.outline { background: transparent; border: 1px solid #fff; color: #fff; }
         .btn-magic { background: linear-gradient(45deg, #ff00cc, #3333ff); color: #fff; border:none; }
+        .btn-video { border: 2px solid #ff0055; color: #ff0055; background: rgba(255,0,85,0.1); }
+        .btn-video:hover { background: #ff0055; color: #fff; }
+
         .print-control { display: flex; justify-content: space-between; align-items: center; width: 100%; background: #222; padding: 5px 15px; border-radius: 4px; margin-top: 5px;}
 
         #flash { position: fixed; inset: 0; background: #fff; z-index: 9999; opacity: 0; pointer-events: none; }
@@ -309,7 +294,7 @@
             <button class="btn-coin" onclick="OS.start()">
                 <span class="blink-text">TOUCH TO START</span>
             </button>
-            <p style="margin-top:20px; font-family:var(--font-code); color:#666;">PRO EDITION v3.2 (NEW FRAMES)</p>
+            <p style="margin-top:20px; font-family:var(--font-code); color:#666;">PRO EDITION v4.0 (VIDEO SUPPORT)</p>
         </div>
 
         <div id="screen-frames" class="screen">
@@ -458,6 +443,7 @@
                 
                 <div class="action-btns">
                     <button class="btn-action btn-magic" onclick="OS.decorateStrip()">✨ MAGIC DECORATE</button>
+                    <button class="btn-action btn-video" onclick="OS.downloadVideo()">🎥 VIDEO (7s)</button>
                     <button class="btn-action" onclick="OS.download()">SAVE IMAGE</button>
                     <button class="btn-action outline" onclick="OS.restart()">HOME</button>
                 </div>
@@ -559,7 +545,6 @@
             };
 
             window.onload = async () => {
-                // Boot log removed, just clock
                 setInterval(() => {
                     const d = new Date();
                     document.getElementById('clock').innerText = d.getHours().toString().padStart(2,'0')+":"+d.getMinutes().toString().padStart(2,'0');
@@ -716,7 +701,8 @@
                 }, 3500);
             }
 
-            function generateStripCanvas() {
+            // MODIFIED: Added shiftOrder parameter for video shuffling
+            function generateStripCanvas(shiftOrder = 0) {
                 const f = s.frame;
                 let stripW = C.stripW; 
                 let photoW = 540, photoH = (photoW*3)/4;
@@ -740,7 +726,6 @@
                     }
                 } 
                 else if (f === 'sena-cute') {
-                    // Cute Pinky Background
                     ctx.fillStyle = '#ffe6f2'; ctx.fillRect(0,0,stripW,H);
                     ctx.fillStyle = '#ffb3d9'; 
                     for(let i=0; i<stripW; i+=30) for(let j=0; j<H; j+=30) {
@@ -750,13 +735,11 @@
                     ctx.strokeRect(5,5,stripW-10,H-10); ctx.setLineDash([]);
                 }
                 else if (f === 'sena-cool') {
-                    // Cool Street Dark
                     ctx.fillStyle = '#2b2b2b'; ctx.fillRect(0,0,stripW,H);
                     ctx.strokeStyle = '#333'; ctx.lineWidth = 40;
                     ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(stripW,H); ctx.stroke();
                 }
                 else if (f === 'sena-pop') {
-                    // Pop Art Yellow
                     ctx.fillStyle = '#fff200'; ctx.fillRect(0,0,stripW,H);
                     ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(stripW/2, H); ctx.lineTo(stripW, 0);
                     ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
@@ -767,7 +750,7 @@
                 else if(f === 'thai-red') { ctx.fillStyle = '#4a0000'; ctx.fillRect(0,0,stripW,H); ctx.fillStyle='rgba(0,0,0,0.2)'; for(let i=0;i<500;i++) ctx.fillRect(Math.random()*stripW, Math.random()*H, 1, 1); }
                 else { ctx.fillStyle = '#f8f8f8'; ctx.fillRect(0,0,stripW,H); }
 
-                // --- Header Text ---
+                // --- Header Text (ENSURE SENA PHOTOBOOTH HEADER) ---
                 ctx.textAlign = 'center';
 
                 if(f === 'disco') {
@@ -820,9 +803,17 @@
                     ctx.font = '700 24px "DM Sans"'; ctx.fillText('PHOTOBOOTH', stripW/2, 120);
                 }
 
-                // --- Draw Photos ---
+                // --- Draw Photos (WITH SHIFT LOGIC) ---
                 let y = head;
-                s.photos.forEach(p => {
+                
+                // Copy array so we don't mess up original order
+                let displayPhotos = [...s.photos];
+                // Rotate array based on shiftOrder (Shuffling logic)
+                for(let i=0; i<shiftOrder; i++) {
+                    displayPhotos.unshift(displayPhotos.pop());
+                }
+
+                displayPhotos.forEach(p => {
                     const sR = p.width/p.height; const dR=4/3;
                     let sx, sy, sw, sh;
                     if(sR > dR) { sh=p.height; sw=sh*dR; sx=(p.width-sw)/2; sy=0; }
@@ -871,17 +862,16 @@
             }
 
             // ========================================================
-            //  NEW FEATURE: MAGIC DECORATE (STICKERS)
+            //  DECORATE & UPLOAD LOGIC
             // ========================================================
             function decorateStrip() {
                 const ctx = D.canvas.getContext('2d');
-                const stickers = ["✨", "💖", "⭐", "📷", "🔥", "🎀", "🧸"];
+                const stickers = ["🛝", "👀", "⭐", "🍼", "🫧", "🎀", "🧸"];
                 const w = D.canvas.width;
                 const h = D.canvas.height;
                 
                 Aud.play('magic');
                 
-                // Add 8 random stickers
                 for(let i=0; i<8; i++) {
                     const sticker = stickers[Math.floor(Math.random()*stickers.length)];
                     const x = Math.random() * w;
@@ -897,16 +887,10 @@
                     ctx.restore();
                 }
 
-                // Update Preview Image
                 D.final.src = D.canvas.toDataURL('image/jpeg', 0.95);
-                
-                // Re-trigger confetti for effect
                 confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
             }
 
-            // ========================================================
-            //  FUNCTION UPLOAD TO IMGBB (SERVER SIDE)
-            // ========================================================
             async function handleUpload(base64) {
                 const log = document.getElementById('log-text');
                 const fill = document.getElementById('load-fill');
@@ -962,13 +946,67 @@
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
             }
 
+            // ========================================================
+            //  NEW FEATURE: DOWNLOAD VIDEO (7s Loop)
+            // ========================================================
+            async function downloadVideo() {
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = "⏳ RENDERING...";
+                btn.disabled = true;
+
+                // Capture canvas stream at 30fps
+                const stream = D.canvas.captureStream(30);
+                const recorder = new MediaRecorder(stream, {
+                    mimeType: 'video/webm' 
+                });
+                
+                const chunks = [];
+                recorder.ondataavailable = e => chunks.push(e.data);
+                
+                recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `SENA_VIDEO_${Date.now()}.webm`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    // Reset to normal state
+                    generateStripCanvas(0); 
+                    D.final.src = D.canvas.toDataURL('image/jpeg', 0.95);
+                    btn.innerText = "✅ SAVED!";
+                    setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
+                };
+
+                recorder.start();
+
+                // Start shuffling logic (7 seconds duration)
+                let startTime = Date.now();
+                let shift = 0;
+                
+                const animInterval = setInterval(() => {
+                    shift++;
+                    generateStripCanvas(shift); 
+                    // Update preview img so user sees movement
+                    D.final.src = D.canvas.toDataURL('image/jpeg', 0.8); 
+                    
+                    if (Date.now() - startTime >= 7000) { // 7 Seconds
+                        clearInterval(animInterval);
+                        recorder.stop();
+                    }
+                }, 500); // Change image every 0.5s
+            }
+
             function restart() {
                 location.reload();
             }
 
             return { 
                 start, selectFrame, toggleCamFlip, toggleTimer, toggleFlash, toggleMirror, toggleGrid, 
-                filter, snap, adjCopies, download, restart, decorateStrip 
+                filter, snap, adjCopies, download, restart, decorateStrip, downloadVideo 
             };
         })();
     </script>
