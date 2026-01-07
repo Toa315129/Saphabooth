@@ -12,7 +12,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;900&family=VT323&family=Prompt:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700;900&family=VT323&family=Prompt:wght@400;600;800&family=Fredoka:wght@300;600&family=Bangers&display=swap" rel="stylesheet">
 
     <style>
         @font-face {
@@ -71,13 +71,11 @@
             z-index: 10;
             background: #000;
         }
+        /* แก้ไข: ให้หน้า Home แสดงผลทันทีเมื่อโหลดเสร็จ */
         .screen.active { opacity: 1; pointer-events: auto; }
 
-        #screen-boot {
-            justify-content: flex-start; padding: 40px;
-            font-family: var(--font-code); font-size: 1.5rem; color: var(--accent);
-            z-index: 1000;
-        }
+        /* ลบ CSS ของหน้า Boot ออก หรือซ่อนไว้ */
+        #screen-boot { display: none; }
 
         #screen-home {
             justify-content: center; align-items: center; text-align: center;
@@ -138,18 +136,13 @@
         .photo-slot::after { content: '📷'; position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size: 1.5rem; opacity: 0.2; }
         .strip-footer { text-align: center; font-size: 0.6rem; margin-top: 10px; font-family: var(--font-code); opacity: 0.7; white-space: nowrap; }
 
+        /* Existing Styles */
         .mini-strip.polaroid { background: #f8f8f8; color: #000; border: 1px solid #ddd; }
-        
-        /* แก้ไข CSS DISCO ให้เป็น Silver Grid */
         .mini-strip.disco { 
-            background: #d4d4d4; 
-            color: #fff; 
-            border: 2px solid #fff; 
+            background: #d4d4d4; color: #fff; border: 2px solid #fff; 
             background-image: linear-gradient(#999 1px, transparent 1px), linear-gradient(90deg, #999 1px, transparent 1px); 
-            background-size: 15px 15px;
-            text-shadow: 1px 1px 0 #000;
+            background-size: 15px 15px; text-shadow: 1px 1px 0 #000;
         }
-
         .mini-strip.love { background: #fff; color: #000; border: 3px solid #ff0000; }
         .mini-strip.system { background: #000; color: #0f0; border: 2px solid #0f0; font-family: var(--font-code); }
         .mini-strip.black { background: #1a1a1a; color: #ccc; border: 1px solid #444; }
@@ -157,6 +150,23 @@
         .mini-strip.thai-red { background: #4a0000; color: #ffcccc; border: 2px solid #ff5555; font-family: 'JS Chanok', 'Prompt', sans-serif; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
         .mini-strip.neon { background: #000; color: #fff; border: 2px solid #00f3ff; box-shadow: 0 0 10px #00f3ff; }
         .mini-strip.mono { background: #fff; color: #000; border: 3px solid #000; }
+
+        /* --- NEW STYLES (3 แบบใหม่) --- */
+        .mini-strip.sena-cute { 
+            background: #ffe6f2; color: #ff66b3; border: 4px dashed #ff99cc; 
+            font-family: 'Fredoka', sans-serif; 
+        }
+        .mini-strip.sena-cool { 
+            background: #2b2b2b; color: #ccff00; border: 2px solid #ccff00; 
+            font-family: 'Prompt', sans-serif; 
+            background-image: repeating-linear-gradient(45deg, #333 0, #333 10px, #2b2b2b 10px, #2b2b2b 20px);
+        }
+        .mini-strip.sena-pop { 
+            background: #fff200; color: #000; border: 3px solid #000; 
+            font-family: 'Bangers', cursive;
+            box-shadow: 5px 5px 0px #000;
+        }
+        /* --------------------------- */
 
         #screen-cam { justify-content: space-between; background: #000; }
         
@@ -269,6 +279,7 @@
             width: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .btn-action.outline { background: transparent; border: 1px solid #fff; color: #fff; }
+        .btn-magic { background: linear-gradient(45deg, #ff00cc, #3333ff); color: #fff; border:none; }
         .print-control { display: flex; justify-content: space-between; align-items: center; width: 100%; background: #222; padding: 5px 15px; border-radius: 4px; margin-top: 5px;}
 
         #flash { position: fixed; inset: 0; background: #fff; z-index: 9999; opacity: 0; pointer-events: none; }
@@ -292,24 +303,37 @@
         <div class="scanlines"></div>
         <div class="vignette"></div>
 
-        <div id="screen-boot" class="screen active">
-            <div id="boot-log"></div>
-            <span class="blink-text">_</span>
-        </div>
-
-        <div id="screen-home" class="screen">
+        <div id="screen-home" class="screen active">
             <button style="position:absolute; top:20px; right:20px; background:none; border:none; color:#333; font-size:2rem;" onclick="toggleFullscreen()">⛶</button>
             <div class="main-title">SENA<br>PHOTOBOOTH</div>
             <button class="btn-coin" onclick="OS.start()">
                 <span class="blink-text">TOUCH TO START</span>
             </button>
-            <p style="margin-top:20px; font-family:var(--font-code); color:#666;">PRO EDITION v3.1</p>
+            <p style="margin-top:20px; font-family:var(--font-code); color:#666;">PRO EDITION v3.2 (NEW FRAMES)</p>
         </div>
 
         <div id="screen-frames" class="screen">
             <h2 style="font-family:var(--font-code); color:#fff; margin-bottom:10px; text-align:center;">SELECT THEME</h2>
             
             <div class="frame-list">
+                <div class="mini-strip sena-cute" onclick="OS.selectFrame('sena-cute')">
+                    <div class="strip-header" style="font-weight:600;">SENA<br>PHOTOBOOTH</div>
+                    <div class="strip-photos"><div class="photo-slot" style="border:2px solid #fff;"></div><div class="photo-slot" style="border:2px solid #fff;"></div><div class="photo-slot" style="border:2px solid #fff;"></div></div>
+                    <div class="strip-footer">CUTE MODE</div>
+                </div>
+
+                <div class="mini-strip sena-cool" onclick="OS.selectFrame('sena-cool')">
+                    <div class="strip-header">SENA<br>PHOTOBOOTH</div>
+                    <div class="strip-photos"><div class="photo-slot" style="border:1px solid #ccff00; background:#000;"></div><div class="photo-slot" style="border:1px solid #ccff00; background:#000;"></div><div class="photo-slot" style="border:1px solid #ccff00; background:#000;"></div></div>
+                    <div class="strip-footer">STREET VIBE</div>
+                </div>
+
+                <div class="mini-strip sena-pop" onclick="OS.selectFrame('sena-pop')">
+                    <div class="strip-header" style="letter-spacing:1px; line-height:1;">SENA<br>PHOTOBOOTH</div>
+                    <div class="strip-photos"><div class="photo-slot" style="border:2px solid #000;"></div><div class="photo-slot" style="border:2px solid #000;"></div><div class="photo-slot" style="border:2px solid #000;"></div></div>
+                    <div class="strip-footer">POP STYLE</div>
+                </div>
+
                 <div class="mini-strip disco" onclick="OS.selectFrame('disco')">
                     <div class="strip-header">🪩 SENA 🪩<br><span>DISCO</span></div>
                     <div class="strip-photos"><div class="photo-slot"></div><div class="photo-slot"></div><div class="photo-slot"></div></div>
@@ -433,6 +457,7 @@
                 </div>
                 
                 <div class="action-btns">
+                    <button class="btn-action btn-magic" onclick="OS.decorateStrip()">✨ MAGIC DECORATE</button>
                     <button class="btn-action" onclick="OS.download()">SAVE IMAGE</button>
                     <button class="btn-action outline" onclick="OS.restart()">HOME</button>
                 </div>
@@ -454,9 +479,6 @@
 
         const OS = (function() {
             
-            // =========================================================
-            //  API KEY SETTINGS
-            // =========================================================
             const API_KEY = 'ffc90ad0bc5c7e0c056b68ef7430304a'; 
 
             const C = {
@@ -481,7 +503,6 @@
 
             const D = {
                 screens: {
-                    boot: document.getElementById('screen-boot'),
                     home: document.getElementById('screen-home'),
                     frames: document.getElementById('screen-frames'),
                     cam: document.getElementById('screen-cam'),
@@ -528,18 +549,17 @@
                         g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.01, t+0.1);
                         noise.start(t);
                     }
+                    else if(type === 'magic') {
+                        o.frequency.setValueAtTime(400, t);
+                        o.frequency.linearRampToValueAtTime(1000, t+0.1);
+                        o.frequency.linearRampToValueAtTime(600, t+0.2);
+                        g.gain.value = 0.1; o.start(t); o.stop(t+0.3);
+                    }
                 }
             };
 
             window.onload = async () => {
-                const logs = ["SENA OS PRO v3.1", "LOADING ASSETS...", "INIT CAMERA...", "SYSTEM READY."];
-                const logDiv = document.getElementById('boot-log');
-                for(let l of logs) { 
-                    logDiv.innerHTML += l + "<br>"; 
-                    await new Promise(r => setTimeout(r, 300)); 
-                }
-                setTimeout(() => { switchScreen('home'); }, 500);
-                
+                // Boot log removed, just clock
                 setInterval(() => {
                     const d = new Date();
                     document.getElementById('clock').innerText = d.getHours().toString().padStart(2,'0')+":"+d.getMinutes().toString().padStart(2,'0');
@@ -708,21 +728,40 @@
 
                 // --- Background Drawing Logic ---
                 if(f === 'disco') {
-                    // DISCO SILVER GRID
                     ctx.fillStyle = '#d4d4d4'; ctx.fillRect(0,0,stripW,H);
                     ctx.strokeStyle = '#a0a0a0'; ctx.lineWidth = 2;
                     const gs = 40; 
                     for(let x=0; x<=stripW; x+=gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
                     for(let y=0; y<=H; y+=gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(stripW,y); ctx.stroke(); }
-                    // Sparkles
                     for(let i=0; i<20; i++) {
                         const c = Math.floor(Math.random() * (stripW/gs));
                         const r = Math.floor(Math.random() * (H/gs));
-                        ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                        ctx.fillRect(c*gs, r*gs, gs, gs);
+                        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillRect(c*gs, r*gs, gs, gs);
                     }
-
-                } else if(f === 'black' || f === 'neon') { ctx.fillStyle = '#111'; ctx.fillRect(0,0,stripW,H); }
+                } 
+                else if (f === 'sena-cute') {
+                    // Cute Pinky Background
+                    ctx.fillStyle = '#ffe6f2'; ctx.fillRect(0,0,stripW,H);
+                    ctx.fillStyle = '#ffb3d9'; 
+                    for(let i=0; i<stripW; i+=30) for(let j=0; j<H; j+=30) {
+                        ctx.beginPath(); ctx.arc(i,j,4,0,Math.PI*2); ctx.fill();
+                    }
+                    ctx.strokeStyle = '#ff99cc'; ctx.lineWidth = 10; ctx.setLineDash([15,15]);
+                    ctx.strokeRect(5,5,stripW-10,H-10); ctx.setLineDash([]);
+                }
+                else if (f === 'sena-cool') {
+                    // Cool Street Dark
+                    ctx.fillStyle = '#2b2b2b'; ctx.fillRect(0,0,stripW,H);
+                    ctx.strokeStyle = '#333'; ctx.lineWidth = 40;
+                    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(stripW,H); ctx.stroke();
+                }
+                else if (f === 'sena-pop') {
+                    // Pop Art Yellow
+                    ctx.fillStyle = '#fff200'; ctx.fillRect(0,0,stripW,H);
+                    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(stripW/2, H); ctx.lineTo(stripW, 0);
+                    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+                }
+                else if(f === 'black' || f === 'neon') { ctx.fillStyle = '#111'; ctx.fillRect(0,0,stripW,H); }
                 else if(f === 'system') { ctx.fillStyle = '#000'; ctx.fillRect(0,0,stripW,H); }
                 else if(f === 'thai-chic') { ctx.fillStyle = '#fff5e6'; ctx.fillRect(0,0,stripW,H); }
                 else if(f === 'thai-red') { ctx.fillStyle = '#4a0000'; ctx.fillRect(0,0,stripW,H); ctx.fillStyle='rgba(0,0,0,0.2)'; for(let i=0;i<500;i++) ctx.fillRect(Math.random()*stripW, Math.random()*H, 1, 1); }
@@ -732,12 +771,28 @@
                 ctx.textAlign = 'center';
 
                 if(f === 'disco') {
-                    // Header for Disco (White with Shadow)
                     ctx.shadowColor="#000"; ctx.shadowOffsetX=3; ctx.shadowOffsetY=3;
                     ctx.fillStyle='#fff'; 
                     ctx.font = '900 65px "DM Sans"'; ctx.fillText('🪩 SENA 🪩', stripW/2, 90);
                     ctx.font = '700 30px "DM Sans"'; ctx.fillText('DISCO BOOTH', stripW/2, 135);
-                    ctx.shadowColor="transparent"; // Reset
+                    ctx.shadowColor="transparent";
+                }
+                else if(f === 'sena-cute') {
+                    ctx.fillStyle = '#ff66b3'; ctx.font = '600 60px "Fredoka"';
+                    ctx.fillText('SENA', stripW/2, 85);
+                    ctx.font = '40px "Fredoka"'; ctx.fillText('PHOTOBOOTH', stripW/2, 125);
+                }
+                else if(f === 'sena-cool') {
+                    ctx.fillStyle = '#ccff00'; ctx.font = '800 60px "Prompt"';
+                    ctx.shadowColor = '#ccff00'; ctx.shadowBlur = 10;
+                    ctx.fillText('SENA', stripW/2, 90);
+                    ctx.font = '600 30px "Prompt"'; ctx.fillText('PHOTOBOOTH', stripW/2, 130);
+                    ctx.shadowBlur = 0;
+                }
+                else if(f === 'sena-pop') {
+                    ctx.fillStyle = '#000'; ctx.font = '80px "Bangers"';
+                    ctx.fillText('SENA', stripW/2, 85);
+                    ctx.font = '50px "Bangers"'; ctx.fillText('PHOTOBOOTH', stripW/2, 125);
                 }
                 else if(f === 'love') {
                     ctx.fillStyle = '#000'; ctx.font = 'bold 60px "DM Sans"'; ctx.fillText('I', stripW/2 - 130, 100);
@@ -750,13 +805,11 @@
                     ctx.fillStyle = '#4a3b3b'; 
                     ctx.font = '120px "JS Chanok"';
                     ctx.fillText('เสนาโฟโต้บูธ', stripW/2, 100);
-
                 } else if(f === 'thai-red') {
                     ctx.fillStyle = '#ffcccc'; 
                     ctx.shadowColor='#ff0000'; ctx.shadowBlur=10; 
                     ctx.font = '130px "JS Chanok"';
                     ctx.fillText('เสนา ๒๕๖๙', stripW/2, 100); ctx.shadowBlur=0;
-
                 } else if(f === 'neon') {
                     ctx.fillStyle = '#00f3ff'; ctx.shadowColor='#00f3ff'; ctx.shadowBlur=15; ctx.font = '800 50px "DM Sans"'; ctx.fillText('SENA MARKET', stripW/2, 100); ctx.shadowBlur=0;
                 } else if(f === 'mono') {
@@ -776,6 +829,9 @@
                     else { sw=p.width; sh=sw/dR; sx=0; sy=(p.height-sh)/2; }
                     
                     if(f === 'disco') { ctx.fillStyle='#fff'; ctx.fillRect((stripW-photoW)/2-8, y-8, photoW+16, photoH+16); }
+                    else if(f === 'sena-cute') { ctx.fillStyle='#fff'; ctx.fillRect((stripW-photoW)/2-10, y-10, photoW+20, photoH+20); }
+                    else if(f === 'sena-cool') { ctx.strokeStyle = '#ccff00'; ctx.lineWidth=2; ctx.strokeRect((stripW-photoW)/2 - 5, y - 5, photoW + 10, photoH + 10); }
+                    else if(f === 'sena-pop') { ctx.fillStyle='#000'; ctx.fillRect((stripW-photoW)/2+10, y+10, photoW, photoH); ctx.strokeStyle = '#000'; ctx.lineWidth=5; ctx.strokeRect((stripW-photoW)/2, y, photoW, photoH); }
                     else if(f === 'system') { ctx.strokeStyle = '#0f0'; ctx.lineWidth=2; ctx.strokeRect((stripW-photoW)/2 - 5, y - 5, photoW + 10, photoH + 10); }
                     else if(f === 'love') { ctx.strokeStyle = '#FF0000'; ctx.lineWidth=4; ctx.strokeRect((stripW-photoW)/2, y, photoW, photoH); }
                     else if(f === 'thai-chic') { ctx.strokeStyle = '#d4a5a5'; ctx.lineWidth=3; ctx.strokeRect((stripW-photoW)/2 - 5, y - 5, photoW + 10, photoH + 10); }
@@ -797,27 +853,55 @@
                 let footerText = date + "  •  " + quote;
                 
                 if(f === 'system') footerText = `> ${date} // END_PROCESS`;
-                
                 if(f === 'disco') {
-                    // Footer for Disco
                     ctx.shadowColor="#000"; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2;
                     ctx.fillStyle='#fff';
                     footerText = `${date} • MEMORIES`;
                 }
+                if(f === 'sena-cute') { ctx.fillStyle = '#ff66b3'; ctx.font = '24px "Fredoka"'; footerText = "Have a nice day! " + date; }
+                if(f === 'sena-cool') { ctx.fillStyle = '#ccff00'; ctx.font = '24px "Prompt"'; footerText = "URBAN LIFE • " + date; }
+                if(f === 'sena-pop') { ctx.fillStyle = '#000'; ctx.font = '30px "Bangers"'; footerText = "BANG! " + date; }
 
-                if(f === 'thai-chic') { 
-                    ctx.font = '24px "JS Chanok"'; 
-                    ctx.fillStyle='#4a3b3b'; 
-                    footerText = "บันทึกความทรงจำ • " + date; 
-                }
-                if(f === 'thai-red') { 
-                    ctx.font = '24px "JS Chanok"'; 
-                    footerText = "เท่แบบไทย • " + date; 
-                }
-                 if(f === 'mono') { ctx.font = 'bold 24px "DM Sans"'; ctx.fillStyle='#000'; footerText = "MINIMALIST • " + date; }
+                if(f === 'thai-chic') { ctx.font = '24px "JS Chanok"'; ctx.fillStyle='#4a3b3b'; footerText = "บันทึกความทรงจำ • " + date; }
+                if(f === 'thai-red') { ctx.font = '24px "JS Chanok"'; footerText = "เท่แบบไทย • " + date; }
+                if(f === 'mono') { ctx.font = 'bold 24px "DM Sans"'; ctx.fillStyle='#000'; footerText = "MINIMALIST • " + date; }
 
                 ctx.fillText(footerText, stripW/2, H - 40);
-                ctx.shadowColor="transparent"; // Reset shadow
+                ctx.shadowColor="transparent";
+            }
+
+            // ========================================================
+            //  NEW FEATURE: MAGIC DECORATE (STICKERS)
+            // ========================================================
+            function decorateStrip() {
+                const ctx = D.canvas.getContext('2d');
+                const stickers = ["✨", "💖", "⭐", "📷", "🔥", "🎀", "🧸"];
+                const w = D.canvas.width;
+                const h = D.canvas.height;
+                
+                Aud.play('magic');
+                
+                // Add 8 random stickers
+                for(let i=0; i<8; i++) {
+                    const sticker = stickers[Math.floor(Math.random()*stickers.length)];
+                    const x = Math.random() * w;
+                    const y = Math.random() * h;
+                    const size = 30 + Math.random() * 40;
+                    const rot = (Math.random() - 0.5);
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(rot);
+                    ctx.font = size + "px Arial";
+                    ctx.fillText(sticker, 0, 0);
+                    ctx.restore();
+                }
+
+                // Update Preview Image
+                D.final.src = D.canvas.toDataURL('image/jpeg', 0.95);
+                
+                // Re-trigger confetti for effect
+                confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
             }
 
             // ========================================================
@@ -827,61 +911,42 @@
                 const log = document.getElementById('log-text');
                 const fill = document.getElementById('load-fill');
                 
-                // แก้ไขแล้ว: ปลดล็อคให้ใช้งาน Key นี้ได้ (ตรวจสอบแค่ว่าว่างไหม)
                 if (API_KEY === '') {
-                    alert("⚠️ ยังไม่ได้ใส่ API Key!\nกรุณาไปที่ api.imgbb.com เพื่อรับ Key");
-                    log.innerText = "> MISSING API KEY";
+                    log.innerText = "> NO API KEY";
                     return;
                 }
 
-                // เริ่มหลอดโหลด
                 let p = 0;
                 const int = setInterval(() => { if(p<90) p+=5; fill.style.width=p+"%"; }, 100);
 
                 try {
                     const formData = new FormData();
-                    // ตัด header ของ base64 ออก
                     formData.append("image", base64.split(',')[1]); 
+                    log.innerText = "> CONNECTING...";
 
-                    log.innerText = "> CONNECTING SERVER...";
-
-                    // ส่งไปที่ ImgBB
                     const res = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
-                        method: "POST",
-                        body: formData
+                        method: "POST", body: formData
                     });
                     
                     const data = await res.json();
-
-                    clearInterval(int);
-                    fill.style.width="100%";
+                    clearInterval(int); fill.style.width="100%";
 
                     if (data.success) {
-                        // สำเร็จ: เอา URL มาสร้าง QR Code
                         const imageUrl = data.data.url;
-                        log.innerText = "> UPLOAD COMPLETE!";
-                        
+                        log.innerText = "> DONE!";
                         document.getElementById('qrcode').innerHTML = "";
                         new QRCode(document.getElementById("qrcode"), {
-                            text: imageUrl, 
-                            width: 120, 
-                            height: 120,
-                            colorDark : "#000000",
-                            colorLight : "#ffffff",
+                            text: imageUrl, width: 120, height: 120,
+                            colorDark : "#000000", colorLight : "#ffffff",
                             correctLevel : QRCode.CorrectLevel.H
                         });
                         document.getElementById('qr-box').classList.add('show');
-                        
-                    } else {
-                        throw new Error(data.error.message || "Upload Failed");
-                    }
+                    } else { throw new Error(data.error.message); }
 
                 } catch (err) {
                     clearInterval(int);
-                    fill.style.background = "red";
-                    log.innerText = "> ERROR: " + err.message;
+                    log.innerText = "> ERR";
                     console.error(err);
-                    alert("Upload Error: " + err.message);
                 }
             }
 
@@ -903,10 +968,9 @@
 
             return { 
                 start, selectFrame, toggleCamFlip, toggleTimer, toggleFlash, toggleMirror, toggleGrid, 
-                filter, snap, adjCopies, download, restart 
+                filter, snap, adjCopies, download, restart, decorateStrip 
             };
         })();
     </script>
 </body>
 </html>
-
